@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+    <head></head>
+    <body>
+        <button id="roll-btn">roll</button>
+        <button id="roll-toggle-btn">roll toggle</button>
+
+        <script>
+const rand = Math.random
+
+function first6AfterDot(str) {
+    return str.slice(2,8)
+}
+
+function formatFloat(float) {
+    return first6AfterDot(
+        float.toString())
+}
+
+function getSample() {
+    return formatFloat(rand())
+}
+
+function checkDubs(sample) {
+    const numberToCheck = sample[sample.length - 1]
+    let streak = 0
+    for (let i = sample.length - 2;
+         i >= 0; i--) {
+        if (sample[i] === numberToCheck) {
+            streak++
+        } else return streak
+    }
+}
+
+
+function betGain(money, dubAmount) {
+    if (dubAmount === 0) return 0
+    return money * 10**dubAmount
+}
+
+function betResult(money) {
+    let result = -money
+
+    const sample = getSample()
+    console.log("you rolled: ", sample)
+
+    if (checkDubs(sample) === 0) console.log(".")
+    else if (checkDubs(sample) === 1) console.log("DUBS")
+    else console.log("MORE THAN DUBS")
+
+    // result += betGain(money, checkDubs(sample))
+    if (checkDubs(sample) > 0) result += money * 10
+    return result
+}
+
+function bet(money) {
+    myMoney += betResult(money)
+}
+
+function intCommaSeparate(str) {
+    let strArr = Array.from(str)
+    for (let i = str.length - 3; i >= 0; i -= 3) {
+        strArr.splice(i, 0, ",")
+    }
+    if (strArr[0] === ",") strArr.shift()
+    return strArr.join("")
+}
+
+
+let myMoney = 100_000
+
+// console.log(betResult(50))
+// bet(50)
+console.log(myMoney)
+
+const betAlias = ()=>{bet(Math.floor(myMoney * (100/100)))}
+const betAlias2 = ()=>{
+    betAlias()
+    console.log(
+        intCommaSeparate(
+            myMoney.toString()))
+}
+
+document.querySelector("#roll-btn")
+.addEventListener("click", ()=>{
+    betAlias2()
+})
+
+let rollToggle = false
+document.querySelector("#roll-toggle-btn")
+.addEventListener("click", ()=>{
+    rollToggle = !rollToggle
+    setInterval(
+        ()=>{if (rollToggle) {
+            betAlias2()
+        }
+             else clearInterval()}
+        , 100)
+    })
+
+
+        </script>
+    </body>
+</html>

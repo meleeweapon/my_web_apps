@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Async JavaScript</title>
+</head>
+<body style="background-color: black; color: white;">
+    <label for="quota">Number of primes to generate</label>
+    <input type="text" id="quota" name="quota" value="1000000" />
+
+    <button id="generate_btn">Generate primes</button>
+    <button id="reload_btn">Reload</button>
+
+    <div id="output"></div>
+
+    <button id="xhr">Click to start request</button>
+    <button id="reload">Reload</button>
+
+    <pre readonly class="event-log"></pre>
+
+
+    <script src="asyncJS.js"></script>
+</body>
+</html>

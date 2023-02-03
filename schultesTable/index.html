@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Schulte Table</title>
+</head>
+<body>
+  <style>
+    body {
+      background-color: black;
+    }
+
+    .schulte-table {
+      display: grid;
+      grid-template-columns: auto auto auto auto auto;
+      grid-template-rows: auto auto auto auto auto;
+      gap: 8px;
+
+      background-color: #4c5156;
+
+      padding: 8px;
+      margin-left: auto;
+      margin-right: auto;
+
+      border-radius: 16px;
+
+      min-height: 500px;
+      min-width: 500px;
+      max-height: 500px;
+      max-width: 500px;
+    }
+
+    .table-cell {
+      color: white;
+      background-color: rgb(36, 36, 39);
+      border: none;
+      border-radius: 16px;
+      padding: 20px;
+      font-size: 30px;
+      text-align: center;
+    }
+
+  </style>
+
+  <button id="pause-btn">pause</button>
+  <button id="start-btn">start</button>
+  <button id="get-precise-btn">precise</button>
+
+  <div class="schulte-table">
+    <button id="0" class="table-cell">1</button>
+    <button class="table-cell">2</button>
+    <button class="table-cell">3</button>
+    <button class="table-cell">4</button>
+    <button class="table-cell">5</button>
+    <button class="table-cell">6</button>
+    <button class="table-cell">7</button>
+    <button class="table-cell">8</button>
+    <button class="table-cell">9</button>
+  </div>
+
+  <script src="schulteTable.js"></script>
+</body>
+</html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>calculator</title>
+</head>
+<body>
+  <style>
+    body {
+      background-color: black;
+      color: white;
+    }
+    
+    .display {
+      font-size: 32px;
+      padding: 16px;
+      text-align: center;
+      display: flex;
+      justify-content: center;
+    }
+
+    .buttons {
+      font-size: 32px;
+      margin: 16px;
+      display: grid;
+      grid-template-columns: auto auto auto;
+      background-color: #303030;
+      padding: 10px;
+      grid-column: 1 / 4;
+    }
+
+    .operators {
+      grid-column: 4;
+
+    }
+
+    .button {
+      font-size: 32px;
+      text-align: center;
+      background-color: #404040;
+      margin: 10px;
+      padding: 20px;
+    }
+
+    .all-buttons {
+      display: grid;
+      grid-template-columns: auto auto auto auto;
+      width: 50%;
+      margin-left: 25%;
+    }
+
+    .zero {
+      grid-column: 2;
+      grid-row: inherit;
+    }
+
+    .display > div {
+      margin: 5px;
+    }
+  </style>
+
+  <div class="display">
+    <div class="first-number">0</div>
+    <div class="operator"></div>
+    <div class="second-number"></div>
+    <div class="equals-sign"></div>
+    <div class="result"></div>
+  </div>
+
+  <div class="all-buttons">
+    <div class="buttons">
+      <div class="button one">1</div>
+      <div class="button two">2</div>
+      <div class="button three">3</div>
+      <div class="button four">4</div>
+      <div class="button five">5</div>
+      <div class="button six">6</div>
+      <div class="button seven">7</div>
+      <div class="button eight">8</div>
+      <div class="button nine">9</div>
+      <div class="button zero">0</div>
+    </div>
+
+    <div class="operators">
+      <div class="button add">+</div>
+      <div class="button subtract">-</div>
+      <div class="button multiply">*</div>
+      <div class="button divide">/</div>
+      <div class="button equals">=</div>
+      <div class="button clear">🔁</div>
+    </div>
+  </div>
+
+  <script src="calculator.js"></script>
+</body>
+</html>

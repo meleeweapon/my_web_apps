@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ToDo App</title>
+  <style>
+    body {
+      background-color: black;
+      margin: 0;
+    }
+
+    div.todo-list-container {
+      display: flex;
+      justify-content: center;
+    }
+
+    ul.todo-list {
+      width: 70%;
+      list-style: none;
+      padding: 10px;
+    }
+
+    li.todo-item {
+      background-color: yellow;
+      display: flex;
+      /* padding: 20px 10px; */
+      font-size: x-large;
+      font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+
+      border-radius: 15px;
+    }
+
+    li + li {
+      margin-top: 10px;
+    }
+
+    div.todo-item-text-content {
+      padding: 20px 10px;
+    }
+
+    div.mark-as-done-button-container {
+      flex-grow: 0.1;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.3s;
+    }
+
+    div.mark-as-done-button-container:hover {
+      flex-grow: 1;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+    }
+
+    div.todo-item-text-container {
+      flex-grow: 9;
+    }
+
+    .mark-as-done-button {
+      flex-grow: 1;
+
+      border-radius: 15px;
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+      border: 1px solid black;
+      background-color: #12e038;
+    }
+
+    .mark-as-done-button:hover {
+      background-color: #1fef44;
+      cursor: pointer;
+    }
+
+    .delete-button {
+      flex-grow: 1;
+
+      border-radius: 15px;
+      border-top-left-radius: 0;
+      border-top-right-radius: 0;
+      border: 1px solid black;
+      background-color: rgb(244, 17, 17);
+    }
+
+    .delete-button:hover {
+      background-color: rgb(250, 32, 32);
+      cursor: pointer;
+    }
+
+    div.task-adder-container {
+      position: absolute;
+      width: 100%;
+      height: 10%;
+      bottom: 0;
+
+      display: flex;
+
+      background-color: #202020;
+    }
+
+    div.task-adder-container > .task-adder-input {
+      flex-grow: 8;
+
+      padding-left: 10px;
+
+      font-size: x-large;
+    }
+
+    div.task-adder-container > .add-task-button {
+      flex-grow: 2;
+
+      font-size: x-large;
+    }
+
+    div.task-adder-container > .add-task-button:hover {
+      flex-grow: 2;
+
+      font-size: x-large;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="todo-list-container">
+    <ul class="todo-list">
+    </ul>
+  </div>
+
+  <div class="task-adder-container">
+    <input type="text" class="task-adder-input">
+    <button class="add-task-button">Add</button>
+  </div>
+  
+  <script src="mvcToDoList.js"></script>
+</body>
+</html>

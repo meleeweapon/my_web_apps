@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tower Of Hanoi</title>
+</head>
+<body style="background-color: black;">
+    <style>
+        .rods-container {
+            display: flex;
+            justify-content: center;
+            position: absolute;
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%, 0);
+        }
+
+        .rod-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .rod-base {
+            background-color: white;
+            padding: 20px 180px;
+            margin: 10px 20px;
+        }
+
+        .biggest-disc {
+            background-color: green;
+            padding: 20px 150px;
+            max-width: 0px;
+            margin: 10px 30px;
+        }
+
+        .middle-disc {
+            background-color: red;
+            padding: 20px 130px;
+            max-width: 0px;
+            margin: 10px 30px;
+        }
+
+        .smallest-disc {
+            background-color: blue;
+            padding: 20px 110px;
+            max-width: 0px;
+            margin: 10px 30px;
+        }
+
+        .empty-disc-slot {
+            visibility: hidden;
+            background-color: inherit;
+            padding: 20px 110px;
+            max-width: 0px;
+            margin: 10px 30px;
+        }
+    </style>
+
+
+    <button id="next-move-btn" style="
+    position: absolute;
+    top: 10%;
+    left: 90%
+    ">Next Move</button>
+
+
+    <div class="rods-container">
+        <ol class="rod-container" id="source-rod">
+            <!-- <div class="smallest-disc"></div>
+            <div class="middle-disc"></div>
+            <div class="biggest-disc"></div>
+            <div class="rod-base"></div> -->
+        </ol>
+        <ol class="rod-container" id="auxiliary-rod">
+            <!-- <div class="empty-disc-slot"></div>
+            <div class="empty-disc-slot"></div>
+            <div class="empty-disc-slot"></div>
+            <div class="rod-base"></div> -->
+        </ol>
+        <ol class="rod-container" id="destination-rod">
+            <!-- <div class="empty-disc-slot"></div>
+            <div class="empty-disc-slot"></div>
+            <div class="empty-disc-slot"></div>
+            <div class="rod-base"></div> -->
+        </ol>
+    </div>
+    <script src="towerOfHanoi.js"></script>
+</body>
+</html>

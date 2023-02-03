@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<head></head>
+<body style='background-color: black;'>
+    <script>
+function simpleRecursive(int) {
+    if (int < 0) return
+    console.log(int)
+    simpleRecursive(int - 1)
+}
+
+function nonTailRecursive(int) {
+    if (int <= 0) return 1
+    return int * nonTailRecursive(int - 1)
+}
+
+function tailRecursive(int, acc) {
+    console.trace()
+    if (int <= 0) return acc
+    return tailRecursive(int - 1, acc * int)
+}
+
+function trWrapper(int) { return tailRecursive(int, 1) }
+const trWrapper2 = int => tailRecursive(int, 1)
+
+console.log(trWrapper(6))
+console.log(trWrapper2(6))
+    </script>
+</body>
