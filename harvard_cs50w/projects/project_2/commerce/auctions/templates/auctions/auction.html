@@ -1,0 +1,26 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+  <h1>{{ auction.title }}</h1>
+  <div>{{ auction.description }}</div>
+  <div>Auction holder: {{ auction.holder }}</div>
+
+  {% if user.is_authenticated %}
+    <form action="" method="post">
+      {% csrf_token %}
+      <input min="0" step="0.01" name="bid_amount" type="number">
+      <input type="submit" value="Bid">
+    </form>
+  {% else %}
+    Sign in to bid.
+  {% endif %}
+
+  <h2>Currenct Bids:</h2>
+  <ul>
+    {% for bid in bids %}
+      <li>{{ bid.amount }}</li>
+    {% empty %}
+      <li>No bids yet.</li>
+    {% endfor %}
+  </ul>
+{% endblock %}
