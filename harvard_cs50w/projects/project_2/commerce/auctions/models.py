@@ -28,10 +28,17 @@ class Comment(ms.Model):
   comment_auction = ms.ForeignKey(
     Auction, on_delete=ms.CASCADE, related_name="auction_comments"
   )
+  user = ms.ForeignKey(
+    User, on_delete=ms.CASCADE, related_name="user_comments"
+  )
+
 
 class Bid(ms.Model):
   amount = ms.FloatField()
   date = ms.DateTimeField()
   bid_auction = ms.ForeignKey(
     Auction, on_delete=ms.CASCADE, related_name="auction_bids"
+  )
+  user = ms.ForeignKey(
+    User, on_delete=ms.CASCADE, related_name="user_bids"
   )

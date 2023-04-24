@@ -12,15 +12,37 @@
       <input type="submit" value="Bid">
     </form>
   {% else %}
-    Sign in to bid.
+    <div>Log in to bid.</div>
+  {% endif %}
+  {% if user.is_authenticated %}
+    <form action="" method="post">
+      {% csrf_token %}
+      <textarea name="comment" placeholder="Comment here."
+        rows="5" cols="40"></textarea>
+      <input type="submit" value="Comment">
+    </form>
+  {% else %}
+    <div>Log in to comment.</div>
   {% endif %}
 
   <h2>Currenct Bids:</h2>
   <ul>
     {% for bid in bids %}
+      <li>{{ bid.user }}</li>
       <li>{{ bid.amount }}</li>
     {% empty %}
       <li>No bids yet.</li>
+    {% endfor %}
+  </ul>
+  <h2>Comments</h2>
+  <ul>
+    {% for comment in comments %}
+      <li>
+        <div>{{ comment.user }}</div>
+        <div>{{ comment.content }}</div>
+      </li>
+    {% empty %}
+      <li>No comments yet.</li>
     {% endfor %}
   </ul>
 {% endblock %}

@@ -4,6 +4,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from datetime import datetime
+from django.contrib.auth.decorators import login_required
 
 from .models import User, Bid, Comment, Auction
 
@@ -75,10 +76,11 @@ def auction(request, auction_title):
     auction = Auction.objects.get(title=auction_title)
   except:
     return HttpResponseRedirect(reverse("no_auction"))
-  
-  bids = Bid.objects.filter(bid_auction__title=auction_title)
-  
+
   if request.method == "POST":
+    if not request.user.is_authenticated:
+      return HttpResponseRedirect(reverse("no_auction"))
+
     if "bid_amount" in request.POST:
       current_bid = Bid(
         amount=request.POST["bid_amount"], 
@@ -87,13 +89,36 @@ def auction(request, auction_title):
       )
       current_bid.save()
       return HttpResponseRedirect(auction_url(auction_title))
+    elif "comment" in request.POST:
+      comment = Comment(
+        content=request.POST["comment"],
+        date=datetime.now(),
+        comment_auction=auction,
+        user=request.user
+      )
+      comment.save()
+      return HttpResponseRedirect(auction_url(auction_title))
+
     else:
       return HttpResponseRedirect(reverse("no_auction"))
   
+  bids = auction.auction_bids.all()
+  comments = auction.auction_comments.all()
   return render(request, "auctions/auction.html", {
     "auction": auction,
     "bids": bids,
+    "comments": comments,
   })
 
 def no_auction(request):
   return render(request, "auctions/no_auction.html")
+
+@login_required
+def new_auction_view(request):
+  if request.methed == "POST":
+    ...
+
+
+  return render(request, "auctions/new_auction.html", {
+
+  })
