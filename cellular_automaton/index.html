@@ -5,9 +5,23 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cellular Autamaton</title>
+
+  <style>
+    body {
+      background: #181818;
+    }
+  </style>
 </head>
 <body>
-  <canvas id="the-canvas" width="600" height="600"></canvas>
+  <canvas id="the-canvas" width="800" height="600"></canvas>
+
+  <label for="map-rows">Map Rows:</label>
+  <input id="map-rows" name="map-rows" type="number" step="1" min="0">
+  <button id="map-rows-btn">Set</button>
+
+  <label for="map-cols">Map Columns:</label>
+  <input id="map-cols" name="map-cols" type="number" step="1" min="0">
+  <button id="map-cols-btn">Set</button>
 
   <script src="main.js"></script>
 </body>
