@@ -28,14 +28,13 @@ function cell_step(cell_state, neighbour_count) {
   }
 }
 
-function count_neighbours(map, x, y) {
+function count_neighbours(map, col, row) {
   let count = 0
   let neighbours = [
-    map[x-1][y+1], map[x][y+1], map[x+1][y+1],
-    map[x-1][y]               , map[x+1][y],
-    map[x-1][y-1], map[x][y-1], map[x+1][y-1]
+    map[col-1][row+1], map[col][row+1], map[col+1][row+1],
+    map[col-1][row]                   , map[col+1][row],
+    map[col-1][row-1], map[col][row-1], map[col+1][row-1]
   ]
-  console.log(neighbours)
   neighbours.forEach(cell => {
     if (cell == 'alive') count += 1;
   });
@@ -43,16 +42,27 @@ function count_neighbours(map, x, y) {
   return count;
 }
 
+function map_step(map) {
+  for (let col = 1; col < the_map.length - 1; col++) {
+    for (let row = 1; row < the_map[0].length - 1; row++) {
+      const cell_state = map[col][row];
+      const neighbours = count_neighbours(map, col, row);
+      map[col][row] = cell_step(cell_state, neighbours);
+    }
+  }
+}
+
 function render_map(canvas, canvas_context, map) {
   canvas_context.fillStyle = 'white'
   canvas_context.fillRect(0, 0, canvas.width, canvas.height)
   canvas_context.fillStyle = 'blue'
-  for (let x = 0; x < map_cols; x += 1) {
-    for (let y = 0; y < map_rows; y += 1) {
-      if (map[x][y] == 'alive') {
+
+  for (let col = 0; col < map_cols; col += 1) {
+    for (let row = 0; row < map_rows; row += 1) {
+      if (map[col][row] == 'alive') {
         canvas_context.fillRect(
-          cell_width * x,
-          cell_height * y,
+          cell_width * col,
+          cell_height * row,
           cell_width,
           cell_height
         )
@@ -78,11 +88,6 @@ if (row_range_btn === null) throw new Error(`row_range_btn is null`);
 const column_range_btn = document.querySelector('#map-cols-btn');
 if (column_range_btn === null) throw new Error(`column_range_btn is null`);
 
-row_range_btn.addEventListener('click', (e: any) => {
-  let col = Math.floor( e.offsetX / cell_width );
-  let row = Math.floor( e.offsetY / cell_height );
-})
-
 ctx.fillStyle = '#202020';
 ctx.fillRect(0, 0, c.width, c.height);
 
@@ -96,10 +101,33 @@ type CellState = 'dead' | 'alive';
 
 const the_map: Array<Array<CellState>> = []
 for (let row = 0; row < map_rows; row++) the_map.push(new Array(map_cols).fill('dead'));
-console.log(the_map);
+
+c.addEventListener("click", (e: any) => {
+  console.log(e.offsetX, e.offsetY);
+  const row = Math.floor(e.offsetY / cell_height);
+  const col = Math.floor(e.offsetX / cell_width);
+  the_map[col][row] = 'alive';
+  render_map(c, ctx, the_map);
+});
+
+let interval = null;
+row_range_btn.addEventListener('click', (e: any) => {
+  if (interval === null) {
+    interval = setInterval(() => {
+      map_step(the_map);
+      render_map(c, ctx, the_map);
+    }, 50)
+  } else {
+    clearInterval(interval);
+    interval = null;
+  }
+  
+})
 
 
-// ctx.fillStyle = 'blue'
+render_map(c, ctx, the_map);
+
+
 // for (let i = 0; i < map_rows; i++) {
 //   ctx.fillRect(i * cell_width, i * cell_height, cell_width, cell_height);
 // }
