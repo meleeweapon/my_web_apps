@@ -1,5 +1,16 @@
-var buttons = document.querySelectorAll(".ttt-main > div");
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
+};
+var buttons = __spreadArray([], document.querySelectorAll(".ttt-main > div"), true);
 var turn = "first_player";
+var game_state = "playing";
+var winner = "none";
 var buttons_matrix = [];
 for (var row = 0; row < 3; row++) {
     buttons_matrix.push([]);
@@ -9,14 +20,24 @@ for (var row = 0; row < 3; row++) {
 }
 ;
 var event_listeners = [];
-var _loop_1 = function (elem) {
-    event_listeners.push(function (e) {
-        var _a;
+function button_evlistener(elem) {
+    return function (e) {
+        var _a, _b;
+        if (game_state === "finished") {
+            return;
+        }
+        var bg = elem.style.background;
         if (turn == "first_player") {
+            if (bg !== "") {
+                return;
+            }
             elem.style.background = "green";
             turn = "second_player";
         }
         else {
+            if (bg !== "") {
+                return;
+            }
             elem.style.background = "blue";
             turn = "first_player";
         }
@@ -26,16 +47,32 @@ var _loop_1 = function (elem) {
         if (win_cond) {
             var chl = document.createElement("div");
             chl.textContent = "Game over.";
+            if (win_cond === "green") {
+                chl.textContent += " Player 1 won.";
+            }
+            else {
+                chl.textContent += " Player 2 won.";
+            }
             chl.style.fontSize = "72px";
             (_a = document.querySelector("body")) === null || _a === void 0 ? void 0 : _a.appendChild(chl);
-            for (var i = 0; i < buttons.length; i++)
-                buttons[i].removeEventListener("click", event_listeners[i]);
+            game_state = "finished";
+            // for (let i = 0; i < buttons.length; i++) 
+            //   buttons[i].removeEventListener("click", event_listeners[i]);
         }
-    });
-};
+        var draw_condition = !(buttons.some(function (e) { return (e.style.background === ""); })) && !win_cond;
+        console.log(draw_condition, buttons.some(function (e) { return (e.style.background !== ""); }), !win_cond);
+        if (draw_condition) {
+            var chl = document.createElement("div");
+            chl.textContent = "Game over. Draw";
+            chl.style.fontSize = "72px";
+            (_b = document.querySelector("body")) === null || _b === void 0 ? void 0 : _b.appendChild(chl);
+            game_state = "finished";
+        }
+    };
+}
 for (var _i = 0, buttons_1 = buttons; _i < buttons_1.length; _i++) {
     var elem = buttons_1[_i];
-    _loop_1(elem);
+    event_listeners.push(button_evlistener(elem));
 }
 ;
 for (var i = 0; i < buttons.length; i++) {
@@ -45,14 +82,14 @@ for (var i = 0; i < buttons.length; i++) {
 function all_same(iterable) {
     var first = iterable[0];
     if (first === "")
-        return false;
+        return null;
     for (var _i = 0, iterable_1 = iterable; _i < iterable_1.length; _i++) {
         var item = iterable_1[_i];
         // console.log(first, item);
         if (item !== first)
-            return false;
+            return null;
     }
-    return true;
+    return first;
 }
 function check_win_condition(table) {
     // check rows
@@ -79,12 +116,12 @@ function check_win_condition(table) {
     if (is_win)
         return is_win;
     var cross_2 = [];
-    for (var row = 2, col = 0; row > 0 && col < table[0].length; row--, col++)
+    for (var row = 2, col = 0; row >= 0 && col < table[0].length; row--, col++)
         cross_2.push(table[row][col]);
     var is_win_2 = all_same(cross_2.map(function (elem) { return elem.style.background; }));
     if (is_win_2)
         return is_win_2;
-    return false;
+    return null;
 }
 ;
 // for (const elem of buttons) {
