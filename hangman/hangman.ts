@@ -37,7 +37,7 @@ class Hangman_Game_Model {
     this.players = players;
     this.turn = this.players[0];
     this.words = words;
-    this.set_random_secret_word();
+    this.secret_word = this.random_word();
     if (chances) {
       this.chances = chances;
     } else {
