@@ -1,35 +1,23 @@
-interface Table_HTML {
-  table: HTMLElement;
-  tiles: [
-    HTMLElement, HTMLElement, HTMLElement, 
-    HTMLElement, HTMLElement, HTMLElement, 
-    HTMLElement, HTMLElement, HTMLElement
-  ];
-}
-
 class Table_HTML {
-  table: HTMLElement;
-  tiles: [
+  public table: HTMLElement;
+  public tiles: [
     HTMLElement, HTMLElement, HTMLElement, 
     HTMLElement, HTMLElement, HTMLElement, 
     HTMLElement, HTMLElement, HTMLElement
   ];
 
   constructor(table, tiles) {
-    if (table == null) throw new Error();
-    if (tiles == null) throw new Error();
+    if (table == null) throw new Error("table is null");
+    if (tiles == null) throw new Error("tiles is null");
 
     this.table = table;
 
     const tile_array = Array.from(tiles);
-    if (tile_array.length !== 9) throw new Error();
+    if (tile_array.length !== 9) throw new Error("tile array is longer than 9");
     this.tiles = tiles;
   }
 }
 
-// interface View {
-  
-// }
 
 class View {
   public table: Table_HTML;
@@ -107,7 +95,6 @@ class Controller {
     }
     this.view.render_tiles(this.game.board.tiles);
   }
-
 }
 
 interface Player {
@@ -115,9 +102,6 @@ interface Player {
   color: string;
 }
 
-// interface Tile {
-//   value: null | Player;
-// }
 
 class Tile {
   private _value: null | Player;
@@ -137,20 +121,9 @@ class Tile {
   }
 }
 
-// class PlayerArray {
-//   players: Player[];
-
-//   constructor(players: Player[]) {
-//     this.players = players;
-//   }
-
-//   next(): Player {
-
-//   }
-// }
 
 class Board {
-  tiles: Tile[];
+  public tiles: Tile[];
 
   constructor(tiles: Tile[]) {
     this.tiles = tiles;

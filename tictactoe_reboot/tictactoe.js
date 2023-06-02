@@ -1,3 +1,11 @@
+// interface Table_HTML_Interface {
+//   table: HTMLElement;
+//   tiles: [
+//     HTMLElement, HTMLElement, HTMLElement, 
+//     HTMLElement, HTMLElement, HTMLElement, 
+//     HTMLElement, HTMLElement, HTMLElement
+//   ];
+// }
 var Table_HTML = /** @class */ (function () {
     function Table_HTML(table, tiles) {
         if (table == null)
