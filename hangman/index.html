@@ -5,8 +5,46 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Hangman</title>
+
+  <style>
+    .guess-box {
+      margin-top: 150px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .letter {
+      min-width: 50px;
+      max-width: 50px;
+      width: 50px;
+
+      min-height: 75px;
+      min-height: 75px;
+      height: 75px;
+
+      margin: 0 10px 0 10px;
+
+      font-size: 52px;
+      text-align: center;
+
+      border: 3px solid black;
+      border-top: none;
+      border-left: none;
+      border-right: none;
+    }
+  </style>
 </head>
 <body>
+  <div class="guess-box">
+    <!-- <input type="text" id="letter-0"> -->
+  </div>
+
+  <div>Tried letters:</div>
+  <div class="tried-letters"></div>
+
+  <div>Chances left:</div>
+  <div class="chances"></div>
+
   <script src="hangman.js"></script>
 </body>
 </html>
