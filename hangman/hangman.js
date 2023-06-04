@@ -1,14 +1,4 @@
 "use strict";
-// i have made a HUGE mistake, god forgive me
-// forgot how hangman is played,
-// player is supposed to submit a letter (without index)
-// and all instances of that letter is revealed.
-// instead what i made is, player submits a letter with an index
-// if the submission is correct the letter is revealed
-// this creates problems, like tried letters not being possible to exist
-// also i don't know why i made multiplayer system
-// TODO: fix the whole logic
-// i should fork this.
 function is_alphabetical(str) {
     if (!str) {
         return false;
@@ -59,7 +49,7 @@ class Hangman_Game_Model {
         const index = Math.floor(Math.random() * this.words.length);
         return this.words[index];
     }
-    commit_letter(letter, index) {
+    commit_letter(letter) {
         if (letter.length !== 1) {
             throw new Error("letter len was not 1");
         }
@@ -70,11 +60,7 @@ class Hangman_Game_Model {
             return new commit_result(false, "tried_letter");
         }
         this.tried_letters.push(letter);
-        // check if letter slot is not empty
-        if (this.guess_board[index]) {
-            return new commit_result(false, "full slot");
-        }
-        if (this.secret_word[index] !== letter) {
+        if (!this.secret_word.includes(letter)) {
             this.turn = this.next_turn();
             this.chances -= 1;
             if (this.chances <= 0) {
@@ -82,7 +68,15 @@ class Hangman_Game_Model {
             }
             return new commit_result(false, "wrong letter");
         }
-        this.guess_board[index] = letter;
+        const letter_indices = [];
+        for (const letter_index in this.secret_word) {
+            if (this.secret_word[letter_index] == letter) {
+                letter_indices.push(letter_index);
+            }
+        }
+        for (const index of letter_indices) {
+            this.guess_board[index] = letter;
+        }
         if (this.win_condition()) {
             this.game_state = "over";
         }
@@ -105,11 +99,13 @@ class View {
     constructor() {
         this.guess_box = HTMLElement;
         this.letter_boxes = (Array);
+        this.input_field = HTMLElement;
         this.chances = HTMLElement;
         this.tried_letters = HTMLElement;
         this.guess_box = document.querySelector(".guess-box");
         this.chances = document.querySelector(".chances");
         this.tried_letters = document.querySelector(".tried-letters");
+        this.input_field = document.querySelector(".input-field");
         this.letter_boxes = [];
     }
     render_chances(chances) {
@@ -123,28 +119,23 @@ class View {
             if (!letters[letter_index])
                 continue;
             // TODO: cache this in this class
-            const letter = document.querySelector(`#${letter_index}`);
-            letter === null || letter === void 0 ? void 0 : letter.value = letters[letter_index];
+            const letter = document.querySelector(`#letter-${letter_index}`);
+            letter === null || letter === void 0 ? void 0 : letter.textContent = letters[letter_index];
         }
     }
     init_word(letters) {
         for (const letter_index in letters) {
-            const letter_element = document.createElement("input");
+            const letter_element = document.createElement("div");
             letter_element.id = `letter-${letter_index}`;
             letter_element.className = "letter";
-            letter_element.maxLength = 1;
             this.guess_box.appendChild(letter_element);
             this.letter_boxes.push(letter_element);
         }
     }
-    // public init_event_listeners() {
-    //   for (const letter of letters) {
-    //     this.letter_event_listener(letter, );
-    //   }
-    // }
-    letter_event_listener(event_type, letter_element, callback, context, ...args) {
-        letter_element.addEventListener(event_type, event => {
-            callback.call(context, event, letter_element, ...args);
+    // this feels wrong
+    element_handle(event_type, element, callback, context, ...args) {
+        element.addEventListener(event_type, event => {
+            callback.call(context, event, element, ...args);
         });
     }
 }
@@ -155,41 +146,40 @@ class Presenter {
         this.view.init_word(this.game.guess_board);
         this.init_event_listeners();
         this.view.render_chances(this.game.chances);
+        this.input_field_last_value = "";
     }
     init_event_listeners() {
-        for (const letter of this.view.letter_boxes) {
-            view.letter_event_listener("input", letter, this.letter_box_callback, this);
-        }
+        this.view.element_handle("input", this.view.input_field, this.input_field_callback, this);
     }
-    letter_box_callback(event, letter) {
+    input_field_callback(event, input_field_element) {
         var _a, _b;
         if (this.game.game_state == "over") {
             return;
         }
         const input = event.data;
-        // if (input.length != 1) {
-        //   throw new Error("input len not 1");
-        // }
-        const index = letter.id.split("-")[1];
         if (input === null) {
-            letter.value = this.game.guess_board[index];
+            input_field_element.value = this.input_field_last_value;
             return;
-        }
-        if (input.length > 1) {
-            throw new Error("input len bigger than 1");
         }
         if (!is_alphabetical(input)) {
-            letter.value = "";
+            input_field_element.value = this.input_field_last_value;
             return;
         }
-        const letter_str = event.data;
-        console.log(letter_str, index, letter);
-        const result = this.game.commit_letter(letter_str, index);
+        let sanitizing_input;
+        if (input.length === 1) {
+            sanitizing_input = input;
+        }
+        else if (input.length > 1) {
+            sanitizing_input = input[input.length - 1];
+        }
+        const sanitized_input = sanitizing_input;
+        this.input_field_last_value = sanitized_input;
+        const result = this.game.commit_letter(sanitized_input);
         if (!result.success) {
-            letter.value = "";
+            input_field_element.value = this.input_field_last_value;
         }
         else {
-            letter.value = input.toUpperCase();
+            input_field_element.value = sanitized_input.toUpperCase();
         }
         if (this.game.chances <= 0) {
             const won_element = document.createElement("div");
@@ -207,6 +197,13 @@ class Presenter {
             won_element.style.fontSize = "64px";
             (_b = document.querySelector("body")) === null || _b === void 0 ? void 0 : _b.appendChild(won_element);
         }
+        this.view.render_guess_box(this.game.guess_board
+            .map(letter => {
+            if (typeof letter === "string") {
+                return letter.toUpperCase();
+            }
+            return letter;
+        }));
         this.view.render_chances(this.game.chances);
         const secret_word_array = Array.from(this.game.secret_word);
         const tried_letters = this.game.tried_letters.map(letter => letter.toUpperCase());
@@ -218,7 +215,3 @@ const words = ["car", "tree", "chair"];
 const view = new View();
 const game = new Hangman_Game_Model(players, words);
 const presenter = new Presenter(view, game);
-// const fdjskla = document.querySelector("#letter-0");
-// fdjskla.addEventListener("input", letter => {
-//   console.log(letter);
-// });
