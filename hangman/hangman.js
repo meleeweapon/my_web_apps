@@ -68,12 +68,12 @@ class Hangman_Game_Model {
             }
             return new commit_result(false, "wrong letter");
         }
-        const letter_indices = [];
-        for (const letter_index in this.secret_word) {
-            if (this.secret_word[letter_index] == letter) {
-                letter_indices.push(letter_index);
-            }
-        }
+        const letter_indices = this.all_letter_indices(letter);
+        // for (const letter_index in this.secret_word) {
+        //   if (this.secret_word[letter_index] == letter) {
+        //     letter_indices.push(letter_index);
+        //   }
+        // }
         for (const index of letter_indices) {
             this.guess_board[index] = letter;
         }
@@ -82,6 +82,15 @@ class Hangman_Game_Model {
         }
         this.turn = this.next_turn();
         return new commit_result(true);
+    }
+    all_letter_indices(letter) {
+        const letter_indices = [];
+        for (const letter_index in this.secret_word) {
+            if (this.secret_word[letter_index] == letter) {
+                letter_indices.push(letter_index);
+            }
+        }
+        return letter_indices;
     }
     next_turn() {
         if (this.turn === this.players[this.players.length - 1]) {
@@ -93,6 +102,34 @@ class Hangman_Game_Model {
     win_condition() {
         const current_letters = this.guess_board.join("");
         return current_letters === this.secret_word;
+    }
+    random_letter() {
+        const letter = this.secret_word[Math.floor(Math.random() * this.secret_word.length)];
+        return letter;
+    }
+    reveal_random_letter() {
+        const letter = this.random_letter();
+        const letter_indices = this.all_letter_indices(letter);
+        for (const index of letter_indices) {
+            this.guess_board[index] = letter;
+        }
+        this.tried_letters.push(letter);
+    }
+    // is not precise
+    reveal_ratio_of_letters(ratio) {
+        if (!(ratio >= 0 && ratio <= 1)) {
+            throw new Error("ratio is not between 0 and 1");
+        }
+        ;
+        const min_reveals_amount = Math.floor(ratio * this.secret_word.length);
+        for (let x = 0; x < min_reveals_amount; x += 1) {
+            const current_revealed_ratio = Math.floor(this.guess_board.filter(letter => letter !== null).length // number of revealed letters
+                / this.secret_word.length);
+            if (current_revealed_ratio >= ratio) {
+                break;
+            }
+            this.reveal_random_letter();
+        }
     }
 }
 class View {
@@ -123,6 +160,9 @@ class View {
             letter === null || letter === void 0 ? void 0 : letter.textContent = letters[letter_index];
         }
     }
+    render_input_field(value) {
+        this.input_field.value = value;
+    }
     init_word(letters) {
         for (const letter_index in letters) {
             const letter_element = document.createElement("div");
@@ -147,6 +187,8 @@ class Presenter {
         this.init_event_listeners();
         this.view.render_chances(this.game.chances);
         this.input_field_last_value = "";
+        this.game.reveal_ratio_of_letters(0.25);
+        this.render_everything();
     }
     init_event_listeners() {
         this.view.element_handle("input", this.view.input_field, this.input_field_callback, this);
@@ -158,11 +200,13 @@ class Presenter {
         }
         const input = event.data;
         if (input === null) {
-            input_field_element.value = this.input_field_last_value;
+            // input_field_element.value = this.input_field_last_value;
+            this.render_input_field_auto();
             return;
         }
         if (!is_alphabetical(input)) {
-            input_field_element.value = this.input_field_last_value;
+            // input_field_element.value = this.input_field_last_value;
+            this.render_input_field_auto();
             return;
         }
         let sanitizing_input;
@@ -175,12 +219,11 @@ class Presenter {
         const sanitized_input = sanitizing_input;
         this.input_field_last_value = sanitized_input;
         const result = this.game.commit_letter(sanitized_input);
-        if (!result.success) {
-            input_field_element.value = this.input_field_last_value;
-        }
-        else {
-            input_field_element.value = sanitized_input.toUpperCase();
-        }
+        // if (!result.success) {
+        //   this.render_input_field_auto()
+        // } else {
+        //   this.render_input_field_auto()
+        // }
         if (this.game.chances <= 0) {
             const won_element = document.createElement("div");
             won_element.textContent = "Lost";
@@ -197,6 +240,12 @@ class Presenter {
             won_element.style.fontSize = "64px";
             (_b = document.querySelector("body")) === null || _b === void 0 ? void 0 : _b.appendChild(won_element);
         }
+        if (this.game.game_state === "over") {
+            input_field_element.setAttribute("disabled", true);
+        }
+        this.render_everything();
+    }
+    render_guess_box_auto() {
         this.view.render_guess_box(this.game.guess_board
             .map(letter => {
             if (typeof letter === "string") {
@@ -204,10 +253,22 @@ class Presenter {
             }
             return letter;
         }));
-        this.view.render_chances(this.game.chances);
-        const secret_word_array = Array.from(this.game.secret_word);
+    }
+    render_tried_letters_auto() {
         const tried_letters = this.game.tried_letters.map(letter => letter.toUpperCase());
         this.view.render_tried_letters(tried_letters);
+    }
+    render_chances_auto() {
+        this.view.render_chances(this.game.chances);
+    }
+    render_input_field_auto() {
+        this.view.render_input_field(this.input_field_last_value.toUpperCase());
+    }
+    render_everything() {
+        this.render_chances_auto();
+        this.render_tried_letters_auto();
+        this.render_guess_box_auto();
+        this.render_input_field_auto();
     }
 }
 const players = [new Player("booba"), new Player("awooga")];

@@ -87,12 +87,12 @@ class Hangman_Game_Model {
       return new commit_result(false, "wrong letter");
     }
 
-    const letter_indices = [];
-    for (const letter_index in this.secret_word) {
-      if (this.secret_word[letter_index] == letter) {
-        letter_indices.push(letter_index);
-      }
-    }
+    const letter_indices = this.all_letter_indices(letter);
+    // for (const letter_index in this.secret_word) {
+    //   if (this.secret_word[letter_index] == letter) {
+    //     letter_indices.push(letter_index);
+    //   }
+    // }
 
     for (const index of letter_indices) {
       this.guess_board[index] = letter;
@@ -103,6 +103,16 @@ class Hangman_Game_Model {
     }
     this.turn = this.next_turn();
     return new commit_result(true);
+  }
+
+  public all_letter_indices(letter: string) {
+    const letter_indices = [];
+    for (const letter_index in this.secret_word) {
+      if (this.secret_word[letter_index] == letter) {
+        letter_indices.push(letter_index);
+      }
+    }
+    return letter_indices;
   }
 
   public next_turn(): Player {
@@ -116,6 +126,35 @@ class Hangman_Game_Model {
   public win_condition(): boolean {
     const current_letters = this.guess_board.join("");
     return current_letters === this.secret_word;
+  }
+
+  public random_letter(): string {
+    const letter = this.secret_word[Math.floor(Math.random() * this.secret_word.length)];
+    return letter;
+  }
+
+  public reveal_random_letter(): void {
+    const letter = this.random_letter();
+    const letter_indices = this.all_letter_indices(letter);
+    for (const index of letter_indices) {
+      this.guess_board[index] = letter;
+    }
+    this.tried_letters.push(letter);
+  }
+
+  // is not precise
+  public reveal_ratio_of_letters(ratio: number) {
+    if (!(ratio >= 0 && ratio <= 1)) { throw new Error("ratio is not between 0 and 1")};
+
+    const min_reveals_amount = Math.floor(ratio * this.secret_word.length);
+    for (let x = 0; x < min_reveals_amount; x += 1) {
+      const current_revealed_ratio = Math.floor(
+        this.guess_board.filter(letter => letter !== null).length // number of revealed letters
+        / this.secret_word.length
+      );
+      if (current_revealed_ratio >= ratio) { break; }
+      this.reveal_random_letter();
+    }
   }
 }
 
@@ -150,6 +189,10 @@ class View {
       const letter = document.querySelector(`#letter-${letter_index}`);
       letter?.textContent = letters[letter_index];
     }
+  }
+
+  public render_input_field(value: string): void {
+    this.input_field.value = value;
   }
 
   public init_word(letters: string[]): void {
@@ -192,6 +235,9 @@ class Presenter {
     this.view.render_chances(this.game.chances);
 
     this.input_field_last_value = "";
+
+    this.game.reveal_ratio_of_letters(0.25);
+    this.render_everything();
   }
 
   public init_event_listeners() {
@@ -203,17 +249,19 @@ class Presenter {
     )
   }
 
-  public input_field_callback(event, input_field_element) {
+  public input_field_callback(event, input_field_element: HTMLElement) {
     if (this.game.game_state == "over") { return; }
 
     const input = event.data;
     if (input === null) {
-      input_field_element.value = this.input_field_last_value;
+      // input_field_element.value = this.input_field_last_value;
+      this.render_input_field_auto();
       return;
     }
 
     if (!is_alphabetical(input)) {
-      input_field_element.value = this.input_field_last_value;
+      // input_field_element.value = this.input_field_last_value;
+      this.render_input_field_auto();
       return;
     }
 
@@ -230,11 +278,11 @@ class Presenter {
 
     const result = this.game.commit_letter(sanitized_input);
 
-    if (!result.success) {
-      input_field_element.value = this.input_field_last_value;
-    } else {
-      input_field_element.value = sanitized_input.toUpperCase();
-    }
+    // if (!result.success) {
+    //   this.render_input_field_auto()
+    // } else {
+    //   this.render_input_field_auto()
+    // }
 
     if (this.game.chances <= 0) {
       const won_element = document.createElement("div");
@@ -252,7 +300,14 @@ class Presenter {
       won_element.style.fontSize = "64px";
       document.querySelector("body")?.appendChild(won_element);
     }
+    if (this.game.game_state === "over") {
+      input_field_element.setAttribute("disabled", true);
+    }
 
+    this.render_everything();
+  }
+
+  public render_guess_box_auto(): void {
     this.view.render_guess_box(
       this.game.guess_board
         .map(letter => {
@@ -262,10 +317,26 @@ class Presenter {
           return letter;
         })
     );
-    this.view.render_chances(this.game.chances);
-    const secret_word_array = Array.from(this.game.secret_word);
+  }
+
+  public render_tried_letters_auto(): void {
     const tried_letters = this.game.tried_letters.map(letter => letter.toUpperCase())
     this.view.render_tried_letters(tried_letters);
+  }
+
+  public render_chances_auto(): void {
+    this.view.render_chances(this.game.chances);
+  }
+
+  public render_input_field_auto(): void {
+    this.view.render_input_field(this.input_field_last_value.toUpperCase());
+  }
+
+  public render_everything(): void {
+    this.render_chances_auto();
+    this.render_tried_letters_auto();
+    this.render_guess_box_auto();
+    this.render_input_field_auto();
   }
 }
 
