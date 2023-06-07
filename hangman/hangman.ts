@@ -2,8 +2,6 @@
 // TODO: adjust revealed word ratio
 // TODO: add new word button
 // TODO: add score
-// TODO: add tip
-// TODO: reveal word after loss
 // TODO: make tried letter look better, make it a tray
 // TODO: maybe for cherry on top, add a stickman figure or smt else
 
@@ -14,6 +12,11 @@ function is_alphabetical(str: string): boolean {
     if (!(code > 96 && code < 123) && !(code > 64 && code < 91)) { return false; }
   }
   return true;
+}
+
+function random_from(supports_index): any {
+  const random_element = supports_index[Math.floor(Math.random() * supports_index.length)];
+  return random_element;
 }
 
 class Player {
@@ -137,18 +140,33 @@ class Hangman_Game_Model {
     return current_letters === this.secret_word;
   }
 
-  public random_letter(): string {
-    const letter = this.secret_word[Math.floor(Math.random() * this.secret_word.length)];
-    return letter;
-  }
+  // public random_letter(): string {
+  //   const letter = this.secret_word[Math.floor(Math.random() * this.secret_word.length)];
+  //   return letter;
+  // }
 
   public reveal_random_letter(): void {
-    const letter = this.random_letter();
-    const letter_indices = this.all_letter_indices(letter);
-    for (const index of letter_indices) {
-      this.guess_board[index] = letter;
+    if (!this.guess_board.includes(null)) {
+      throw new Error("no letters to reveal");
     }
-    this.tried_letters.push(letter);
+    const letter = random_from(this.non_revealed_letters());
+
+    this.commit_letter(letter);
+  }
+
+  public non_revealed_letters(): string[] {
+    const letters = [];
+    const revealed_letters = this.revealed_letters();
+    for (const letter of this.secret_word) {
+      if (!revealed_letters.includes(letter)) {
+        letters.push(letter);
+      }
+    }
+    return letters;
+  }
+
+  public revealed_letters(): string[] {
+    return this.guess_board.filter(l => l !== null);
   }
 
   // is not precise
@@ -162,8 +180,8 @@ class Hangman_Game_Model {
         / this.secret_word.length
       );
       if (current_revealed_ratio >= ratio) { break; }
-      // this.reveal_random_letter();
-      this.commit_letter(this.random_letter())
+      this.reveal_random_letter();
+      // this.commit_letter(this.random_letter())
     }
   }
 }
@@ -175,12 +193,16 @@ class View {
   public input_field = HTMLElement;
   public chances = HTMLElement;
   public tried_letters = HTMLElement;
+  public tip_button = HTMLElement;
+  public tip_amount = HTMLElement;
 
   constructor() {
     this.guess_box = document.querySelector(".guess-box");
     this.chances = document.querySelector(".chances");
     this.tried_letters = document.querySelector(".tried-letters");
     this.input_field = document.querySelector(".input-field");
+    this.tip_button = document.querySelector(".tip-button");
+    this.tip_amount = document.querySelector(".tip-amount");
     this.letter_boxes = [];
   }
 
@@ -201,8 +223,30 @@ class View {
     }
   }
 
+  public render_win_condition(): void {
+      const won_element = document.createElement("div");
+      won_element.textContent = "Won";
+      won_element.style.color = "#00dd00";
+      won_element.style.textAlign = "center";
+      won_element.style.fontSize = "64px";
+      document.querySelector("body")?.appendChild(won_element);
+  }
+
+  public render_lose_condition(): void {
+      const won_element = document.createElement("div");
+      won_element.textContent = "Lost";
+      won_element.style.color = "#dd0000";
+      won_element.style.textAlign = "center";
+      won_element.style.fontSize = "64px";
+      document.querySelector("body")?.appendChild(won_element);
+  }
+
   public render_input_field(value: string): void {
     this.input_field.value = value;
+  }
+
+  public render_tip_amount(tip_amount: number): void {
+    this.tip_amount.textContent = tip_amount;
   }
 
   public init_word(letters: string[]): void {
@@ -233,6 +277,7 @@ class Presenter {
   public view: View;
   public game: Hangman_Game_Model;
   public input_field_last_value: string;
+  public tip_amount: number;
 
   constructor(view: View, game: Hangman_Game_Model) {
     this.view = view;
@@ -246,6 +291,8 @@ class Presenter {
 
     this.input_field_last_value = "";
 
+    this.tip_amount = 3;
+
     this.game.reveal_ratio_of_letters(0.25);
     this.render_everything();
   }
@@ -256,6 +303,13 @@ class Presenter {
       this.view.input_field,
       this.input_field_callback,
       this,
+    )
+
+    this.view.element_handle(
+      "click",
+      this.view.tip_button,
+      this.tip_button_callback,
+      this
     )
   }
 
@@ -295,26 +349,42 @@ class Presenter {
     // }
 
     if (this.game.chances <= 0) {
-      const won_element = document.createElement("div");
-      won_element.textContent = "Lost";
-      won_element.style.color = "#dd0000";
-      won_element.style.textAlign = "center";
-      won_element.style.fontSize = "64px";
-      document.querySelector("body")?.appendChild(won_element);
+      this.view.render_lose_condition();
+      this.render_guess_box_reveal_secret_word();
     }
     if (this.game.win_condition()) {
-      const won_element = document.createElement("div");
-      won_element.textContent = "Won";
-      won_element.style.color = "#00dd00";
-      won_element.style.textAlign = "center";
-      won_element.style.fontSize = "64px";
-      document.querySelector("body")?.appendChild(won_element);
+      this.view.render_win_condition();
     }
     if (this.game.game_state === "over") {
       input_field_element.setAttribute("disabled", true);
     }
 
     this.render_everything();
+  }
+
+  public tip_button_callback(event, tip_button_element: HTMLElement) {
+    if (this.tip_amount <= 0) {
+      return;
+    }
+    // TODO: fix ending the game with tip button not ending the game correctly
+    if (this.game.non_revealed_letters().length <= 1) {
+      return;
+    }
+    this.game.reveal_random_letter();
+    this.tip_amount -= 1;
+    this.render_everything();
+  }
+
+  public render_guess_box_reveal_secret_word(): void {
+    this.view.render_guess_box(
+      Array.from(this.game.secret_word)
+        .map(letter => {
+          if (typeof letter === "string") {
+            return letter.toUpperCase();
+          } 
+          return letter;
+        })
+    );
   }
 
   public render_guess_box_auto(): void {
@@ -342,11 +412,16 @@ class Presenter {
     this.view.render_input_field(this.input_field_last_value.toUpperCase());
   }
 
+  public render_tip_amount_auto(): void {
+    this.view.render_tip_amount(this.tip_amount);
+  }
+
   public render_everything(): void {
     this.render_chances_auto();
     this.render_tried_letters_auto();
     this.render_guess_box_auto();
     this.render_input_field_auto();
+    this.render_tip_amount_auto();
   }
 }
 

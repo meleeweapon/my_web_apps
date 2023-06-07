@@ -3,8 +3,7 @@
 // TODO: adjust revealed word ratio
 // TODO: add new word button
 // TODO: add score
-// TODO: add tip
-// TODO: reveal word after loss
+// TODO: reveal word after loss D
 // TODO: make tried letter look better, make it a tray
 // TODO: maybe for cherry on top, add a stickman figure or smt else
 function is_alphabetical(str) {
@@ -18,6 +17,10 @@ function is_alphabetical(str) {
         }
     }
     return true;
+}
+function random_from(supports_index) {
+    const random_element = supports_index[Math.floor(Math.random() * supports_index.length)];
+    return random_element;
 }
 class Player {
     constructor(name) {
@@ -111,17 +114,29 @@ class Hangman_Game_Model {
         const current_letters = this.guess_board.join("");
         return current_letters === this.secret_word;
     }
-    random_letter() {
-        const letter = this.secret_word[Math.floor(Math.random() * this.secret_word.length)];
-        return letter;
-    }
+    // public random_letter(): string {
+    //   const letter = this.secret_word[Math.floor(Math.random() * this.secret_word.length)];
+    //   return letter;
+    // }
     reveal_random_letter() {
-        const letter = this.random_letter();
-        const letter_indices = this.all_letter_indices(letter);
-        for (const index of letter_indices) {
-            this.guess_board[index] = letter;
+        if (!this.guess_board.includes(null)) {
+            throw new Error("no letters to reveal");
         }
-        this.tried_letters.push(letter);
+        const letter = random_from(this.non_revealed_letters());
+        this.commit_letter(letter);
+    }
+    non_revealed_letters() {
+        const letters = [];
+        const revealed_letters = this.revealed_letters();
+        for (const letter of this.secret_word) {
+            if (!revealed_letters.includes(letter)) {
+                letters.push(letter);
+            }
+        }
+        return letters;
+    }
+    revealed_letters() {
+        return this.guess_board.filter(l => l !== null);
     }
     // is not precise
     reveal_ratio_of_letters(ratio) {
@@ -136,8 +151,8 @@ class Hangman_Game_Model {
             if (current_revealed_ratio >= ratio) {
                 break;
             }
-            // this.reveal_random_letter();
-            this.commit_letter(this.random_letter());
+            this.reveal_random_letter();
+            // this.commit_letter(this.random_letter())
         }
     }
 }
@@ -148,10 +163,14 @@ class View {
         this.input_field = HTMLElement;
         this.chances = HTMLElement;
         this.tried_letters = HTMLElement;
+        this.tip_button = HTMLElement;
+        this.tip_amount = HTMLElement;
         this.guess_box = document.querySelector(".guess-box");
         this.chances = document.querySelector(".chances");
         this.tried_letters = document.querySelector(".tried-letters");
         this.input_field = document.querySelector(".input-field");
+        this.tip_button = document.querySelector(".tip-button");
+        this.tip_amount = document.querySelector(".tip-amount");
         this.letter_boxes = [];
     }
     render_chances(chances) {
@@ -169,8 +188,29 @@ class View {
             letter === null || letter === void 0 ? void 0 : letter.textContent = letters[letter_index];
         }
     }
+    render_win_condition() {
+        var _a;
+        const won_element = document.createElement("div");
+        won_element.textContent = "Won";
+        won_element.style.color = "#00dd00";
+        won_element.style.textAlign = "center";
+        won_element.style.fontSize = "64px";
+        (_a = document.querySelector("body")) === null || _a === void 0 ? void 0 : _a.appendChild(won_element);
+    }
+    render_lose_condition() {
+        var _a;
+        const won_element = document.createElement("div");
+        won_element.textContent = "Lost";
+        won_element.style.color = "#dd0000";
+        won_element.style.textAlign = "center";
+        won_element.style.fontSize = "64px";
+        (_a = document.querySelector("body")) === null || _a === void 0 ? void 0 : _a.appendChild(won_element);
+    }
     render_input_field(value) {
         this.input_field.value = value;
+    }
+    render_tip_amount(tip_amount) {
+        this.tip_amount.textContent = tip_amount;
     }
     init_word(letters) {
         for (const letter_index in letters) {
@@ -196,14 +236,15 @@ class Presenter {
         this.init_event_listeners();
         this.view.render_chances(this.game.chances);
         this.input_field_last_value = "";
+        this.tip_amount = 3;
         this.game.reveal_ratio_of_letters(0.25);
         this.render_everything();
     }
     init_event_listeners() {
         this.view.element_handle("input", this.view.input_field, this.input_field_callback, this);
+        this.view.element_handle("click", this.view.tip_button, this.tip_button_callback, this);
     }
     input_field_callback(event, input_field_element) {
-        var _a, _b;
         if (this.game.game_state == "over") {
             return;
         }
@@ -234,25 +275,37 @@ class Presenter {
         //   this.render_input_field_auto()
         // }
         if (this.game.chances <= 0) {
-            const won_element = document.createElement("div");
-            won_element.textContent = "Lost";
-            won_element.style.color = "#dd0000";
-            won_element.style.textAlign = "center";
-            won_element.style.fontSize = "64px";
-            (_a = document.querySelector("body")) === null || _a === void 0 ? void 0 : _a.appendChild(won_element);
+            this.view.render_lose_condition();
+            this.render_guess_box_reveal_secret_word();
         }
         if (this.game.win_condition()) {
-            const won_element = document.createElement("div");
-            won_element.textContent = "Won";
-            won_element.style.color = "#00dd00";
-            won_element.style.textAlign = "center";
-            won_element.style.fontSize = "64px";
-            (_b = document.querySelector("body")) === null || _b === void 0 ? void 0 : _b.appendChild(won_element);
+            this.view.render_win_condition();
         }
         if (this.game.game_state === "over") {
             input_field_element.setAttribute("disabled", true);
         }
         this.render_everything();
+    }
+    tip_button_callback(event, tip_button_element) {
+        if (this.tip_amount <= 0) {
+            return;
+        }
+        // TODO: fix ending the game with tip button not ending the game correctly
+        if (this.game.non_revealed_letters().length <= 1) {
+            return;
+        }
+        this.game.reveal_random_letter();
+        this.tip_amount -= 1;
+        this.render_everything();
+    }
+    render_guess_box_reveal_secret_word() {
+        this.view.render_guess_box(Array.from(this.game.secret_word)
+            .map(letter => {
+            if (typeof letter === "string") {
+                return letter.toUpperCase();
+            }
+            return letter;
+        }));
     }
     render_guess_box_auto() {
         this.view.render_guess_box(this.game.guess_board
@@ -273,11 +326,15 @@ class Presenter {
     render_input_field_auto() {
         this.view.render_input_field(this.input_field_last_value.toUpperCase());
     }
+    render_tip_amount_auto() {
+        this.view.render_tip_amount(this.tip_amount);
+    }
     render_everything() {
         this.render_chances_auto();
         this.render_tried_letters_auto();
         this.render_guess_box_auto();
         this.render_input_field_auto();
+        this.render_tip_amount_auto();
     }
 }
 const players = [new Player("booba"), new Player("awooga")];
