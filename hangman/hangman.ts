@@ -1,8 +1,9 @@
-// TODO: adjust chances based on word len
-// TODO: adjust revealed word ratio
+// TODO: adjust chances based on word len D
+// TODO: adjust revealed letter ratio D
+// TODO: make tried letter look better, make it a tray D
 // TODO: add new word button
 // TODO: add score
-// TODO: make tried letter look better, make it a tray
+// TODO: make tray letters clickable
 // TODO: maybe for cherry on top, add a stickman figure or smt else
 
 function is_alphabetical(str: string): boolean {
@@ -53,6 +54,8 @@ class Hangman_Game_Model {
   public words: string[];
   public chances: number;
   public tried_letters: string[];
+  public chance_ratio: number;
+  public reveal_ratio: number;
 
   constructor(players: Player[], words: string[], chances?: number) {
     this.game_state = "playing";
@@ -60,10 +63,13 @@ class Hangman_Game_Model {
     this.turn = this.players[0];
     this.words = words;
     this.secret_word = this.random_word();
+    this.chance_ratio = 1.50;
+    this.reveal_ratio = 0.25;
     if (chances) {
       this.chances = chances;
     } else {
-      this.chances = 10;
+      // this.chances = 10;
+      this.chances = this.chance_amount_based_on_word_lenght(this.chance_ratio);
     }
     this.guess_board = Array(this.secret_word.length).fill(null);
     this.tried_letters = [];
@@ -71,6 +77,11 @@ class Hangman_Game_Model {
 
   public set_random_secret_word(): void {
     this.secret_word = this.random_word();
+  }
+
+  public chance_amount_based_on_word_lenght(ratio: number) {
+    const amount = Math.floor(this.secret_word.length * ratio);
+    return amount;
   }
 
   public random_word(): string {
@@ -199,7 +210,17 @@ class View {
   constructor() {
     this.guess_box = document.querySelector(".guess-box");
     this.chances = document.querySelector(".chances");
-    this.tried_letters = document.querySelector(".tried-letters");
+    this.tried_letters = document.querySelector(".tried-letter-container");
+    [
+      "a", "b", "c", "d", "e", "f", "g", "h", "i" "j", "k", "l", "m",
+      "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
+    ].forEach(letter => {
+      const tried_letter = document.createElement("div");
+      tried_letter.setAttribute("class", "tray-letter non-tried");
+      tried_letter.setAttribute("id", letter);
+      tried_letter.textContent = letter.toUpperCase();
+      this.tried_letters.appendChild(tried_letter);
+    })
     this.input_field = document.querySelector(".input-field");
     this.tip_button = document.querySelector(".tip-button");
     this.tip_amount = document.querySelector(".tip-amount");
@@ -211,7 +232,12 @@ class View {
   }
 
   public render_tried_letters(letters: string[]): void {
-    this.tried_letters.textContent = letters.join(" ");
+    // this.tried_letters.textContent = letters.join(" ");
+    for (const letter of letters) {
+      const tried_letter_element = document.querySelector("#" + letter.toLocaleLowerCase());
+      console.log(tried_letter_element);
+      tried_letter_element?.setAttribute("class", "tray-letter tried");
+    }
   }
 
   public render_guess_box(letters: string[]): void {
@@ -291,9 +317,9 @@ class Presenter {
 
     this.input_field_last_value = "";
 
-    this.tip_amount = 3;
+    this.tip_amount = 1;
 
-    this.game.reveal_ratio_of_letters(0.25);
+    this.game.reveal_ratio_of_letters(this.game.reveal_ratio);
     this.render_everything();
   }
 
@@ -366,14 +392,17 @@ class Presenter {
     if (this.tip_amount <= 0) {
       return;
     }
-    // TODO: fix ending the game with tip button not ending the game correctly
-    if (this.game.non_revealed_letters().length <= 1) {
+    if (this.game.non_revealed_letters().length <= 0) {
       return;
     }
     this.game.reveal_random_letter();
     this.tip_amount -= 1;
+    if (this.game.win_condition()) {
+      this.view.render_win_condition();
+    }
     this.render_everything();
   }
+
 
   public render_guess_box_reveal_secret_word(): void {
     this.view.render_guess_box(
@@ -400,7 +429,8 @@ class Presenter {
   }
 
   public render_tried_letters_auto(): void {
-    const tried_letters = this.game.tried_letters.map(letter => letter.toUpperCase())
+    // const tried_letters = this.game.tried_letters.map(letter => letter.toUpperCase())
+    const tried_letters = this.game.tried_letters;
     this.view.render_tried_letters(tried_letters);
   }
 

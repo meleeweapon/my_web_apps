@@ -49,6 +49,34 @@
       font-size: 52px;
       text-align: center;
     }
+
+    .tried-letter-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px 5px;
+
+      max-width: 300px;
+    }
+
+    .tray-letter {
+      min-width: 30px;
+      max-width: 30px;
+      width: 30px;
+
+      min-height: 42.5px;
+      min-height: 42.5px;
+      height: 42.5px;
+
+      font-size: 32px;
+      text-align: center;
+
+      border: 2px solid black;
+      border-radius: 5px;
+    }
+
+    .tried {
+      background-color: #f78d8d;
+    }
   </style>
 </head>
 <body>
@@ -59,7 +87,10 @@
   <input type="text" class="input-field">
 
   <div>Tried letters:</div>
-  <div class="tried-letters"></div>
+  <div class="tried-letter-container">
+    <!-- <div class="tray-letter non-tried" id="a">A</div> -->
+    <!-- <div class="tray-letter tried" id="b">B</div> -->
+  </div>
 
   <div>Chances left:</div>
   <div class="chances"></div>
