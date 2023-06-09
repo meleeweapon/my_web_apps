@@ -72,10 +72,59 @@
 
       border: 2px solid black;
       border-radius: 5px;
+
+      cursor: pointer;
     }
 
     .tried {
       background-color: #f78d8d;
+    }
+
+    .utility-container {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .game-over-text {
+      text-align: center;
+      font-size: 64px;
+    }
+
+    .state-container {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+
+      max-width: 300px;
+      min-width: 300px;
+      width: 300px;
+
+      font-size: 24px;
+      text-align: center;
+    }
+
+    .chances {
+      font-size: 32px;
+    }
+
+    .tip-amount {
+      font-size: 32px;
+    }
+
+    .tip-button {
+      font-size: 24px;
+
+    }
+
+    .game-over-container {
+      /* justify-content: center; */
+    }
+
+    .next-word-button {
+      visibility: hidden;
+      display: block;
+      margin: 0 auto 0 auto;
+      font-size: 58px;
     }
   </style>
 </head>
@@ -86,18 +135,33 @@
 
   <input type="text" class="input-field">
 
-  <div>Tried letters:</div>
-  <div class="tried-letter-container">
-    <!-- <div class="tray-letter non-tried" id="a">A</div> -->
-    <!-- <div class="tray-letter tried" id="b">B</div> -->
+  <div class="utility-container">
+    <div>
+      <div class="tried-letter-container">
+        <!-- <div class="tray-letter non-tried" id="a">A</div> -->
+        <!-- <div class="tray-letter tried" id="b">B</div> -->
+      </div>
+    </div>
+    
+    <div class="game-over-container">
+      <div class="game-over-text">
+      </div>
+      <button class="next-word-button">Next Word</button>
+    </div>
+
+    <div class="state-container">
+      <div class="chances-container">
+        <div class="chances-left-label">Chances left:</div>
+        <div class="chances"></div>
+      </div>
+
+      <div class="tips-container">
+        <div>Tips left:</div>
+        <div class="tip-amount"></div>
+        <button class="tip-button">Give a tip</button>
+      </div>
+    </div>
   </div>
-
-  <div>Chances left:</div>
-  <div class="chances"></div>
-
-  <div>Tips left:</div>
-  <div class="tip-amount"></div>
-  <button class="tip-button">Give a tip</button>
 
   <script src="hangman.js"></script>
 </body>

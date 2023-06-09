@@ -1,10 +1,10 @@
 "use strict";
-// TODO: adjust chances based on word len D
-// TODO: adjust revealed letter ratio D
-// TODO: make tried letter look better, make it a tray D
+// TODO: make tray letters clickable D
 // TODO: add new word button
 // TODO: add score
-// TODO: make tray letters clickable
+// TODO: make tray letters background color green if correct red if wrong
+// TODO: might change utility container to divide into 3 equal parts instead of space between
+// TODO: might wana do a slight refactor at presenter about commiting a letter
 // TODO: maybe for cherry on top, add a stickman figure or smt else
 function is_alphabetical(str) {
     if (!str) {
@@ -169,23 +169,29 @@ class View {
         this.letter_boxes = (Array);
         this.input_field = HTMLElement;
         this.chances = HTMLElement;
-        this.tried_letters = HTMLElement;
+        this.tried_letter_container = HTMLElement;
+        this.tried_letters = (Array);
         this.tip_button = HTMLElement;
         this.tip_amount = HTMLElement;
+        this.game_over_text = HTMLElement;
         this.guess_box = document.querySelector(".guess-box");
         this.chances = document.querySelector(".chances");
-        this.tried_letters = document.querySelector(".tried-letter-container");
-        [
+        this.tried_letter_container = document.querySelector(".tried-letter-container");
+        this.tried_letters = [
             "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
             "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
-        ].forEach(letter => {
+        ].map(letter => {
             const tried_letter = document.createElement("div");
             tried_letter.setAttribute("class", "tray-letter non-tried");
             tried_letter.setAttribute("id", letter);
             tried_letter.textContent = letter.toUpperCase();
-            this.tried_letters.appendChild(tried_letter);
+            return tried_letter;
         });
+        for (const tried_letter of this.tried_letters) {
+            this.tried_letter_container.appendChild(tried_letter);
+        }
         this.input_field = document.querySelector(".input-field");
+        this.game_over_text = document.querySelector(".game-over-text");
         this.tip_button = document.querySelector(".tip-button");
         this.tip_amount = document.querySelector(".tip-amount");
         this.letter_boxes = [];
@@ -197,7 +203,6 @@ class View {
         // this.tried_letters.textContent = letters.join(" ");
         for (const letter of letters) {
             const tried_letter_element = document.querySelector("#" + letter.toLocaleLowerCase());
-            console.log(tried_letter_element);
             tried_letter_element === null || tried_letter_element === void 0 ? void 0 : tried_letter_element.setAttribute("class", "tray-letter tried");
         }
     }
@@ -211,22 +216,24 @@ class View {
         }
     }
     render_win_condition() {
-        var _a;
-        const won_element = document.createElement("div");
-        won_element.textContent = "Won";
-        won_element.style.color = "#00dd00";
-        won_element.style.textAlign = "center";
-        won_element.style.fontSize = "64px";
-        (_a = document.querySelector("body")) === null || _a === void 0 ? void 0 : _a.appendChild(won_element);
+        // const won_element = document.createElement("div");
+        // won_element.textContent = "Won";
+        // won_element.style.color = "#00dd00";
+        // won_element.style.textAlign = "center";
+        // won_element.style.fontSize = "64px";
+        // document.querySelector("body")?.appendChild(won_element);
+        this.game_over_text.textContent = "Won";
+        this.game_over_text.style.color = "#00dd00";
     }
     render_lose_condition() {
-        var _a;
-        const won_element = document.createElement("div");
-        won_element.textContent = "Lost";
-        won_element.style.color = "#dd0000";
-        won_element.style.textAlign = "center";
-        won_element.style.fontSize = "64px";
-        (_a = document.querySelector("body")) === null || _a === void 0 ? void 0 : _a.appendChild(won_element);
+        // const won_element = document.createElement("div");
+        // won_element.textContent = "Lost";
+        // won_element.style.color = "#dd0000";
+        // won_element.style.textAlign = "center";
+        // won_element.style.fontSize = "64px";
+        // document.querySelector("body")?.appendChild(won_element);
+        this.game_over_text.textContent = "Lost";
+        this.game_over_text.style.color = "#dd0000";
     }
     render_input_field(value) {
         this.input_field.value = value;
@@ -265,6 +272,9 @@ class Presenter {
     init_event_listeners() {
         this.view.element_handle("input", this.view.input_field, this.input_field_callback, this);
         this.view.element_handle("click", this.view.tip_button, this.tip_button_callback, this);
+        for (const tray_letter_element of this.view.tried_letters) {
+            this.view.element_handle("click", tray_letter_element, this.tray_letter_callback, this);
+        }
     }
     input_field_callback(event, input_field_element) {
         if (this.game.game_state == "over") {
@@ -319,6 +329,25 @@ class Presenter {
         this.tip_amount -= 1;
         if (this.game.win_condition()) {
             this.view.render_win_condition();
+        }
+        this.render_everything();
+    }
+    tray_letter_callback(event, tray_letter_element) {
+        if (this.game.game_state == "over") {
+            return;
+        }
+        this.game.commit_letter(tray_letter_element.id);
+        const sanitized_input = tray_letter_element.id;
+        this.input_field_last_value = sanitized_input;
+        if (this.game.chances <= 0) {
+            this.view.render_lose_condition();
+            this.render_guess_box_reveal_secret_word();
+        }
+        if (this.game.win_condition()) {
+            this.view.render_win_condition();
+        }
+        if (this.game.game_state === "over") {
+            this.view.input_field.setAttribute("disabled", true);
         }
         this.render_everything();
     }
