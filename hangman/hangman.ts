@@ -1,9 +1,12 @@
-// TODO: make tray letters clickable D
-// TODO: add new word button
+// TODO: add new word button D
+// TODO: add retry button
 // TODO: add score
 // TODO: make tray letters background color green if correct red if wrong
+
+// TODO: might make cursor non-allowed on tray letters
 // TODO: might change utility container to divide into 3 equal parts instead of space between
 // TODO: might wana do a slight refactor at presenter about commiting a letter
+
 // TODO: maybe for cherry on top, add a stickman figure or smt else
 
 function is_alphabetical(str: string): boolean {
@@ -46,7 +49,7 @@ class commit_result {
 }
 
 class Hangman_Game_Model {
-  public game_state: "playing" | "over";
+  public game_state: "playing" | "paused" | "over";
   public secret_word: string;
   public guess_board: string[];
   public players: Player[];
@@ -58,21 +61,44 @@ class Hangman_Game_Model {
   public reveal_ratio: number;
 
   constructor(players: Player[], words: string[], chances?: number) {
-    this.game_state = "playing";
+    this.game_state = "paused";
     this.players = players;
     this.turn = this.players[0];
     this.words = words;
-    this.secret_word = this.random_word();
+    this.secret_word = "";
     this.chance_ratio = 1.50;
     this.reveal_ratio = 0.25;
     if (chances) {
       this.chances = chances;
     } else {
       // this.chances = 10;
-      this.chances = this.chance_amount_based_on_word_lenght(this.chance_ratio);
+      this.chances = 0;
     }
-    this.guess_board = Array(this.secret_word.length).fill(null);
+    this.guess_board = [];
     this.tried_letters = [];
+  }
+
+  public new_word(): void {
+    this.secret_word = this.initialize_secret_word();
+    this.chances = this.initialize_chances();
+    this.guess_board = this.initialize_guess_board();
+    this.tried_letters = this.initialize_tried_letters();
+  }
+
+  public initialize_guess_board(): string[] {
+    return Array(this.secret_word.length).fill(null);
+  }
+
+  public initialize_tried_letters(): string[] {
+    return [];
+  }
+
+  public initialize_chances(): number {
+    return this.chance_amount_based_on_word_lenght(this.chance_ratio);
+  }
+
+  public initialize_secret_word(): string {
+    return this.random_word();
   }
 
   public set_random_secret_word(): void {
@@ -122,7 +148,7 @@ class Hangman_Game_Model {
     }
 
     if (this.win_condition()) {
-      this.game_state = "over";
+      this.game_state = "paused";
     }
     this.turn = this.next_turn();
     return new commit_result(true);
@@ -208,11 +234,13 @@ class View {
   public tip_button = HTMLElement;
   public tip_amount = HTMLElement;
   public game_over_text = HTMLElement;
+  public next_word_button = HTMLElement;
 
   constructor() {
     this.guess_box = document.querySelector(".guess-box");
     this.chances = document.querySelector(".chances");
     this.tried_letter_container = document.querySelector(".tried-letter-container");
+    this.next_word_button = document.querySelector(".next-word-button");
     this.tried_letters = [
       "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
       "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
@@ -237,12 +265,50 @@ class View {
     this.chances.textContent = chances;
   }
 
+  public reset_tried_letters(): void {
+    for (const tried_letter of this.tried_letters) {
+      tried_letter.setAttribute("class", "tray-letter non-tried");
+    }
+  }
+
+  // TODO: if otherwise, set to non-tried
   public render_tried_letters(letters: string[]): void {
     // this.tried_letters.textContent = letters.join(" ");
     for (const letter of letters) {
       const tried_letter_element = document.querySelector("#" + letter.toLocaleLowerCase());
       tried_letter_element?.setAttribute("class", "tray-letter tried");
     }
+  }
+
+  public focus_on_input_field(): void {
+    this.input_field.focus();
+  }
+
+  public hide_game_over_text(): void {
+    this.game_over_text.setAttribute("class", "game-over-text non-exposed")
+  }
+
+  public expose_game_over_text(): void {
+    this.game_over_text.setAttribute("class", "game-over-text")
+  }
+
+  public hide_next_word_button(): void {
+    this.next_word_button.setAttribute("class", "next-word-button non-available-button");
+  }
+
+  public expose_next_word_button(): void {
+    this.next_word_button.setAttribute("class", "next-word-button");
+  }
+
+  public disable_input_field(): void {
+    this.input_field.setAttribute("disabled", true);
+    this.input_field.setAttribute("class", "input-field disabled")
+  }
+
+  public enable_input_field(): void {
+    // this.input_field.setAttribute("disabled", false);
+    this.input_field.removeAttribute("disabled");
+    this.input_field.setAttribute("class", "input-field")
   }
 
   public render_guess_box(letters: string[]): void {
@@ -287,10 +353,16 @@ class View {
   }
 
   public init_word(letters: string[]): void {
+    while (this.guess_box.firstChild) {
+      console.log(this.guess_box.firstChild);
+      this.guess_box.removeChild(this.guess_box.firstChild);
+    }
+    this.letter_boxes = [];
+
     for (const letter_index in letters) {
       const letter_element = document.createElement("div");
-      letter_element.id = `letter-${letter_index}`;
-      letter_element.className = "letter";
+      letter_element.setAttribute("id", `letter-${letter_index}`);
+      letter_element.setAttribute("class", "letter");
       this.guess_box.appendChild(letter_element);
       this.letter_boxes.push(letter_element);
     }
@@ -320,21 +392,29 @@ class Presenter {
     this.view = view;
     this.game = game;
 
-    this.view.init_word(this.game.guess_board);
-
+    this.new_word_auto();
     this.init_event_listeners();
-
-    this.view.render_chances(this.game.chances);
-
-    this.input_field_last_value = "";
-
-    this.tip_amount = 1;
-
-    this.game.reveal_ratio_of_letters(this.game.reveal_ratio);
     this.render_everything();
   }
 
-  public init_event_listeners() {
+  public new_word_auto(): void {
+    if (this.game.game_state !== "paused") { return; }
+
+    this.input_field_last_value = "";
+    this.tip_amount = 1;
+    this.game.game_state = "playing";
+    this.game.new_word();
+    this.game.reveal_ratio_of_letters(this.game.reveal_ratio);
+    this.view.hide_game_over_text();
+    this.view.hide_next_word_button();
+    this.view.reset_tried_letters();
+    this.view.enable_input_field();
+    this.view.init_word(this.game.guess_board);
+    this.view.focus_on_input_field();
+    this.render_everything();
+  }
+
+  public init_event_listeners(): void {
     this.view.element_handle(
       "input",
       this.view.input_field,
@@ -357,6 +437,18 @@ class Presenter {
         this
       )
     }
+
+    this.view.element_handle(
+      "click",
+      this.view.next_word_button,
+      this.next_word_callback,
+      this
+    )
+  }
+
+  public next_word_callback(event, next_word_element: HTMLElement) {
+    if (this.game.game_state !== "paused") { return; }
+    this.new_word_auto();
   }
 
   public input_field_callback(event, input_field_element: HTMLElement) {
@@ -364,13 +456,11 @@ class Presenter {
 
     const input = event.data;
     if (input === null) {
-      // input_field_element.value = this.input_field_last_value;
       this.render_input_field_auto();
       return;
     }
 
     if (!is_alphabetical(input)) {
-      // input_field_element.value = this.input_field_last_value;
       this.render_input_field_auto();
       return;
     }
@@ -394,17 +484,6 @@ class Presenter {
     //   this.render_input_field_auto()
     // }
 
-    if (this.game.chances <= 0) {
-      this.view.render_lose_condition();
-      this.render_guess_box_reveal_secret_word();
-    }
-    if (this.game.win_condition()) {
-      this.view.render_win_condition();
-    }
-    if (this.game.game_state === "over") {
-      input_field_element.setAttribute("disabled", true);
-    }
-
     this.render_everything();
   }
 
@@ -417,9 +496,6 @@ class Presenter {
     }
     this.game.reveal_random_letter();
     this.tip_amount -= 1;
-    if (this.game.win_condition()) {
-      this.view.render_win_condition();
-    }
     this.render_everything();
   }
 
@@ -429,19 +505,31 @@ class Presenter {
     const sanitized_input = tray_letter_element.id;
     this.input_field_last_value = sanitized_input;
 
-    if (this.game.chances <= 0) {
-      this.view.render_lose_condition();
-      this.render_guess_box_reveal_secret_word();
-    }
-    if (this.game.win_condition()) {
-      this.view.render_win_condition();
-    }
-    if (this.game.game_state === "over") {
-      this.view.input_field.setAttribute("disabled", true);
-    }
     this.render_everything();
   }
 
+  public render_game_over_auto(): void {
+    if (this.game.chances <= 0) {
+      this.render_lose_condition_auto();
+    }
+    if (this.game.win_condition()) {
+      this.render_win_condition_auto();
+    }
+    if (this.game.game_state !== "playing") {
+      this.view.disable_input_field();
+      this.view.expose_game_over_text();
+    }
+  }
+
+  public render_lose_condition_auto(): void {
+      this.view.render_lose_condition();
+      this.render_guess_box_reveal_secret_word();
+  }
+
+  public render_win_condition_auto(): void {
+    this.view.render_win_condition();
+    this.view.expose_next_word_button();
+  }
 
   public render_guess_box_reveal_secret_word(): void {
     this.view.render_guess_box(
@@ -491,6 +579,7 @@ class Presenter {
     this.render_guess_box_auto();
     this.render_input_field_auto();
     this.render_tip_amount_auto();
+    this.render_game_over_auto();
   }
 }
 

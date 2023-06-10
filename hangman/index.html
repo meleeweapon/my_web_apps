@@ -121,10 +121,21 @@
     }
 
     .next-word-button {
-      visibility: hidden;
       display: block;
       margin: 0 auto 0 auto;
       font-size: 58px;
+    }
+
+    .non-available-button {
+      visibility: hidden;
+    }
+
+    .non-exposed {
+      visibility: hidden;
+    }
+
+    .disabled {
+      cursor: not-allowed;
     }
   </style>
 </head>
@@ -144,9 +155,9 @@
     </div>
     
     <div class="game-over-container">
-      <div class="game-over-text">
+      <div class="game-over-text non-exposed">
       </div>
-      <button class="next-word-button">Next Word</button>
+      <button class="next-word-button non-available-button">Next Word</button>
     </div>
 
     <div class="state-container">
