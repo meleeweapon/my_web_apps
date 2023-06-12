@@ -1,10 +1,6 @@
-// TODO: add new word button D
-// TODO: add retry button
-// TODO: add score
-// TODO: make tray letters background color green if correct red if wrong
+// TODO: chances need fine tuning
+// TODO: rework tip, give it every 2 or 3 words
 
-// TODO: might make cursor non-allowed on tray letters
-// TODO: might change utility container to divide into 3 equal parts instead of space between
 // TODO: might wana do a slight refactor at presenter about commiting a letter
 
 // TODO: maybe for cherry on top, add a stickman figure or smt else
@@ -225,22 +221,26 @@ class Hangman_Game_Model {
 
 
 class View {
-  public guess_box = HTMLElement;
-  public letter_boxes = Array<HTMLElement>;
-  public input_field = HTMLElement;
-  public chances = HTMLElement;
-  public tried_letter_container = HTMLElement;
-  public tried_letters = Array<HTMLElement>;
-  public tip_button = HTMLElement;
-  public tip_amount = HTMLElement;
-  public game_over_text = HTMLElement;
-  public next_word_button = HTMLElement;
+  public guess_box: HTMLElement;
+  public letter_boxes: Array<HTMLElement>;
+  public input_field: HTMLElement;
+  public chances: HTMLElement;
+  public tried_letter_container: HTMLElement;
+  public tried_letters: Array<HTMLElement>;
+  public tip_button: HTMLElement;
+  public tip_amount: HTMLElement;
+  public game_over_text: HTMLElement;
+  public next_word_button: HTMLElement;
+  public retry_button: HTMLElement;
+  public score: HTMLElement;
 
   constructor() {
     this.guess_box = document.querySelector(".guess-box");
     this.chances = document.querySelector(".chances");
     this.tried_letter_container = document.querySelector(".tried-letter-container");
     this.next_word_button = document.querySelector(".next-word-button");
+    this.retry_button = document.querySelector(".retry-button");
+    this.score = document.querySelector(".score");
     this.tried_letters = [
       "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
       "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
@@ -272,12 +272,20 @@ class View {
   }
 
   // TODO: if otherwise, set to non-tried
-  public render_tried_letters(letters: string[]): void {
+  public render_tried_letters(tried_letters: string[], confirmed_letters: string[]): void {
     // this.tried_letters.textContent = letters.join(" ");
-    for (const letter of letters) {
+    for (const letter of tried_letters) {
       const tried_letter_element = document.querySelector("#" + letter.toLocaleLowerCase());
       tried_letter_element?.setAttribute("class", "tray-letter tried");
     }
+    for (const letter of confirmed_letters) {
+      const tried_letter_element = document.querySelector("#" + letter.toLocaleLowerCase());
+      tried_letter_element?.setAttribute("class", "tray-letter confirmed");
+    }
+  }
+
+  public render_score(score: number): void {
+    this.score.textContent = score.toString();
   }
 
   public focus_on_input_field(): void {
@@ -298,6 +306,14 @@ class View {
 
   public expose_next_word_button(): void {
     this.next_word_button.setAttribute("class", "next-word-button");
+  }
+
+  public hide_retry_button(): void {
+    this.retry_button.setAttribute("class", "retry-button non-available-button");
+  }
+
+  public expose_retry_button(): void {
+    this.retry_button.setAttribute("class", "retry-button");
   }
 
   public disable_input_field(): void {
@@ -387,10 +403,15 @@ class Presenter {
   public game: Hangman_Game_Model;
   public input_field_last_value: string;
   public tip_amount: number;
+  public score: number;
+  public score_multiplier: number;
 
   constructor(view: View, game: Hangman_Game_Model) {
     this.view = view;
     this.game = game;
+
+    this.score = 0;
+    this.score_multiplier = 10;
 
     this.new_word_auto();
     this.init_event_listeners();
@@ -398,7 +419,11 @@ class Presenter {
   }
 
   public new_word_auto(): void {
-    if (this.game.game_state !== "paused") { return; }
+    // if (this.game.game_state !== "paused") { return; }
+    if (this.game.game_state === "playing") {
+      console.log("jfkdlsa")
+      return; 
+    }
 
     this.input_field_last_value = "";
     this.tip_amount = 1;
@@ -444,11 +469,26 @@ class Presenter {
       this.next_word_callback,
       this
     )
+
+    this.view.element_handle(
+      "click",
+      this.view.retry_button,
+      this.retry_callback,
+      this
+    )
   }
 
   public next_word_callback(event, next_word_element: HTMLElement) {
     if (this.game.game_state !== "paused") { return; }
     this.new_word_auto();
+  }
+
+  public retry_callback(event, retry_element: HTMLElement) {
+    if (this.game.game_state !== "over") { return; }
+    this.view.hide_retry_button();
+    this.score = 0;
+    this.new_word_auto();
+    this.game.game_state = "playing";
   }
 
   public input_field_callback(event, input_field_element: HTMLElement) {
@@ -488,6 +528,10 @@ class Presenter {
   }
 
   public tip_button_callback(event, tip_button_element: HTMLElement) {
+    if (this.game.game_state !== "playing") {
+      return;
+    }
+
     if (this.tip_amount <= 0) {
       return;
     }
@@ -500,8 +544,9 @@ class Presenter {
   }
 
   public tray_letter_callback(event, tray_letter_element: HTMLElement) {
-    if (this.game.game_state == "over") { return; }
-    this.game.commit_letter(tray_letter_element.id);
+    if (this.game.game_state !== "playing") { return; }
+    const result = this.game.commit_letter(tray_letter_element.id);
+
     const sanitized_input = tray_letter_element.id;
     this.input_field_last_value = sanitized_input;
 
@@ -513,6 +558,7 @@ class Presenter {
       this.render_lose_condition_auto();
     }
     if (this.game.win_condition()) {
+      this.score += this.game.secret_word.length * this.score_multiplier;
       this.render_win_condition_auto();
     }
     if (this.game.game_state !== "playing") {
@@ -523,6 +569,7 @@ class Presenter {
 
   public render_lose_condition_auto(): void {
       this.view.render_lose_condition();
+      this.view.expose_retry_button();
       this.render_guess_box_reveal_secret_word();
   }
 
@@ -558,7 +605,8 @@ class Presenter {
   public render_tried_letters_auto(): void {
     // const tried_letters = this.game.tried_letters.map(letter => letter.toUpperCase())
     const tried_letters = this.game.tried_letters;
-    this.view.render_tried_letters(tried_letters);
+    const confirmed_letters = this.game.guess_board.filter(l => l !== null)
+    this.view.render_tried_letters(tried_letters, confirmed_letters);
   }
 
   public render_chances_auto(): void {
@@ -573,6 +621,10 @@ class Presenter {
     this.view.render_tip_amount(this.tip_amount);
   }
 
+  public render_score_auto(): void {
+    this.view.render_score(this.score);
+  }
+
   public render_everything(): void {
     this.render_chances_auto();
     this.render_tried_letters_auto();
@@ -580,6 +632,7 @@ class Presenter {
     this.render_input_field_auto();
     this.render_tip_amount_auto();
     this.render_game_over_auto();
+    this.render_score_auto();
   }
 }
 

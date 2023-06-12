@@ -78,6 +78,7 @@
 
     .tried {
       background-color: #f78d8d;
+      cursor: not-allowed;
     }
 
     .utility-container {
@@ -111,6 +112,10 @@
       font-size: 32px;
     }
 
+    .score {
+      font-size: 32px;
+    }
+
     .tip-button {
       font-size: 24px;
 
@@ -126,6 +131,12 @@
       font-size: 58px;
     }
 
+    .retry-button {
+      display: block;
+      margin: 0 auto 0 auto;
+      font-size: 58px;
+    }
+
     .non-available-button {
       visibility: hidden;
     }
@@ -135,6 +146,11 @@
     }
 
     .disabled {
+      cursor: not-allowed;
+    }
+
+    .confirmed {
+      background-color: #70fa64;
       cursor: not-allowed;
     }
   </style>
@@ -158,9 +174,15 @@
       <div class="game-over-text non-exposed">
       </div>
       <button class="next-word-button non-available-button">Next Word</button>
+      <button class="retry-button non-available-button">Retry</button>
     </div>
 
     <div class="state-container">
+      <div class="score-container">
+        <div class="score-label">Score:</div>
+        <div class="score"></div>
+      </div>
+
       <div class="chances-container">
         <div class="chances-left-label">Chances left:</div>
         <div class="chances"></div>
