@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Task Creation</title>
+</head>
+<body>
+  <div>
+    <label>Title:</label>
+    <input type="text" id="titleInput" data-bind="value: title" />
+  </div>
+  <div>
+    <label>Description:</label>
+    <input type="text" id="descriptionInput" data-bind="value: description" />
+  </div>
+  <div>
+    <button id="saveButton" data-bind="click: saveTask">Save</button>
+  </div>
+
+  <script>
+    // Model
+    class Task {
+      constructor(title, description) {
+        this.title = title;
+        this.description = description;
+      }
+    }
+
+    // ViewModel
+    const viewModel = {
+      title: '',
+      description: '',
+      saveTask() {
+        const task = new Task(this.title, this.description);
+        // Perform additional logic or save the task using appropriate methods
+        console.log('Task saved:', task);
+      }
+    };
+
+    // Binding logic
+    const bindData = () => {
+      const titleInput = document.getElementById('titleInput');
+      const descriptionInput = document.getElementById('descriptionInput');
+      const saveButton = document.getElementById('saveButton');
+
+      // Bind input values to ViewModel properties
+      titleInput.addEventListener('input', () => {
+        viewModel.title = titleInput.value;
+      });
+
+      descriptionInput.addEventListener('input', () => {
+        viewModel.description = descriptionInput.value;
+      });
+
+      // Bind button click event to ViewModel function
+      saveButton.addEventListener('click', () => {
+        viewModel.saveTask();
+      });
+    };
+
+    // Initialize the binding logic after the DOM has loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      bindData();
+    });
+  </script>
+</body>
+</html>
