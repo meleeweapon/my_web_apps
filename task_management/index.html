@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Manager</title>
+
+  <style>
+    .new-task-container {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="new-task-container">
+    <div class="title-field-container">
+      <label">Title</label>
+      <input type="text" id="title">
+    </div>
+
+    <div class="description-field-container">
+      <label">Description</label>
+      <input type="text" id="description">
+    </div>
+
+    <button id="add-task">Add Task</button>
+  </div>
+
+  <div class="task-list-container">
+    <ul class="task-list">
+      <div class="task">
+        <div class="task-title"></div>
+        <div class="task-description"></div>
+        </div>
+      </div>
+    </ul>
+  </div>
+
+  <div class="filter-field-container">
+  </div>
+
+  <script src="task_management.js"></script>
+</body>
+</html>
