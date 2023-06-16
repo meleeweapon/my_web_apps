@@ -1,3 +1,5 @@
+// note: this is not real mvvm, a binder tool is required to achieve mvvm architecture
+
 // model
 class Task {
   constructor(
@@ -24,90 +26,156 @@ class TaskDatabase {
   }
 }
 
-const taskDataBase = new TaskDatabase();
-
 // viewmodel
-interface ViewModel {
-  title: string;
-  description: string;
-  // deadline: Date;
-  tasksToDisplay: Task[];
-  addTask(): void;
-  fetchTasks(): void;
-  renderTasks(taskListElemnt: HTMLElement): void;
+class ViewModel {
+  private _title: string;
+  private _description: string;
+  private _tasksToDisplay: Task[];
+  private taskDataBase: TaskDatabase;
+  private eventTasksToDisplay: boolean;
+
+  constructor(taskDataBase: TaskDatabase) {
+    this.title = "";
+    this.description = "";
+    this.taskDataBase = taskDataBase;
+    this.eventTasksToDisplay = false;
+    this.fetchTasksToDisplay();
+  }
+
+  public get title(): string {
+    return this._title;
+  }
+  public set title(title) {
+    this._title = title;
+    // this.callbacks["title"]();
+  }
+  public get description(): string {
+    return this._description;
+  }
+  public set description(description) {
+    this._description = description;
+  }
+  public get tasksToDisplay(): Task[] {
+    this.fetchTasksToDisplay();
+    return this._tasksToDisplay;
+  }
+  public set tasksToDisplay(tasksToDisplay) {
+
+    // use the getter
+    this._tasksToDisplay = tasksToDisplay;
+  }
+
+  public saveTask(): void {
+    const task = new Task(this.title, this.description, new Date(), null);
+    this.taskDataBase.add_task(task);
+    this.tasksToDisplay;
+  }
+  private fetchTasksToDisplay(): void {
+    this._tasksToDisplay = this.taskDataBase.get_tasks();
+    this.pingEventTasksToListen();
+  }
+
+  public eventListenerTasksToDisplay(callback: Function): void {
+    setInterval(() => {
+      if (this.eventTasksToDisplay) {
+        callback();
+        this.eventTasksToDisplay = !this.eventTasksToDisplay;
+        console.log("event listened")
+      }
+    }, 50);
+  }
+
+  private pingEventTasksToListen(): void {
+    console.log("pinged")
+    this.eventTasksToDisplay = true;
+    console.log(this.eventTasksToDisplay)
+  }
 }
 
-const viewModel: ViewModel = {
-  // make getter setters
-  title: "",
-  description: "",
-  tasksToDisplay: [],
-  addTask(): void {
-    const task = new Task(this.title, this.description, new Date(), null);
-    taskDataBase.add_task(task);
-  },
-  fetchTasks(): void {
-    this.tasksToDisplay = taskDataBase.get_tasks();
-  },
-  renderTasks(taskListElemnt: HTMLElement): void {
-    while (taskListElemnt.firstChild) {
-      taskListElemnt.firstChild.remove()
+
+class View {
+  public titleInputElement: HTMLInputElement;
+  public descriptionInputElement: HTMLInputElement;
+  public addTaskButton: HTMLButtonElement;
+  public taskListElement: HTMLUListElement;
+
+  constructor() {
+    this.titleInputElement = document.querySelector("#title") as HTMLInputElement;
+    this.descriptionInputElement = document.querySelector("#description") as HTMLInputElement;
+    this.addTaskButton = document.querySelector("#add-task") as HTMLButtonElement;
+    this.taskListElement = document.querySelector(".task-list") as HTMLUListElement;
+  }
+
+  public static createTaskElement(task: Task): HTMLElement {
+    const taskElement = document.createElement("div");
+    taskElement.setAttribute("class", "task");
+
+    const taskTitleElement = document.createElement("div");
+    taskTitleElement.setAttribute("class", "task-title");
+    taskTitleElement.textContent = task.title;
+
+    const taskDescriptionElement = document.createElement("div");
+    taskDescriptionElement.setAttribute("class", "task-description");
+    taskDescriptionElement.textContent = task.description;
+
+    taskElement.appendChild(taskTitleElement);
+    taskElement.appendChild(taskDescriptionElement);
+
+    return taskElement;
+  }
+
+  renderTasks(tasksToDisplay: Task[]): void {
+    while (this.taskListElement.firstChild) {
+      this.taskListElement.firstChild.remove();
     }
-    for (const task of viewModel.tasksToDisplay) {
-      const taskElement = createTaskElement(task);
-      taskListElemnt.appendChild(taskElement);
+    for (const task of tasksToDisplay) {
+      const taskElement = View.createTaskElement(task);
+      this.taskListElement.appendChild(taskElement);
       console.log(task)
     }
   }
 }
 
-const createTaskElement = (task: Task): HTMLElement => {
-  const taskElement = document.createElement("div");
-  taskElement.setAttribute("class", "task");
 
-  const taskTitleElement = document.createElement("div");
-  taskTitleElement.setAttribute("class", "task-title");
-  taskTitleElement.textContent = task.title;
+const bindData = (view: View, viewModel: ViewModel) => {
+  viewModel.eventListenerTasksToDisplay(() => {
+    view.renderTasks(viewModel.tasksToDisplay);
+  })
 
-  const taskDescriptionElement = document.createElement("div");
-  taskDescriptionElement.setAttribute("class", "task-description");
-  taskDescriptionElement.textContent = task.description;
+  view.titleInputElement.addEventListener("input", (event) => {
+    viewModel.title = view.titleInputElement.value;
+  })
 
-  taskElement.appendChild(taskTitleElement);
-  taskElement.appendChild(taskDescriptionElement);
+  view.descriptionInputElement.addEventListener("input", (event) => {
+    viewModel.description = view.descriptionInputElement.value;
+  })
 
-  return taskElement;
+  view.addTaskButton.addEventListener("click", (event) => {
+    viewModel.saveTask();
+  })
+
 }
 
-const bindData = () => {
-  // add task block
-  const titleInputElement = document.querySelector("#title") as HTMLInputElement;
-  const descriptionInputElement = document.querySelector("#description") as HTMLInputElement;
-  const addTaskButton = document.querySelector("#add-task") as HTMLButtonElement;
+// class EventListener {
+//   private tasksToDisplayEvent: boolean;
+//   private tasksToDisplayCallback: Function;
 
-  const taskListElement = document.querySelector(".task-list") as HTMLUListElement;
+//   constructor(tasksToDisplayCallback: Function) {
+//     this.tasksToDisplayEvent = false;
+//     this.tasksToDisplayCallback = tasksToDisplayCallback;
+//     setInterval(() => {
+//       if (this.tasksToDisplayEvent) {
+//         this.tasksToDisplayCallback();
+//         this.tasksToDisplayEvent = !this.tasksToDisplayEvent;
+//       }
+//     }, 50)
+//   }
+// }
 
-  titleInputElement.addEventListener("input", (event) => {
-    viewModel.title = titleInputElement.value;
-  })
-
-  descriptionInputElement.addEventListener("input", (event) => {
-    viewModel.description = descriptionInputElement.value;
-  })
-
-  addTaskButton.addEventListener("click", (event) => {
-    viewModel.addTask();
-
-    viewModel.fetchTasks();
-    viewModel.renderTasks(taskListElement);
-  })
-
-  taskListElement.addEventListener("", (event) => {
-    viewModel.fetchTasks();
-    viewModel.renderTasks(taskListElement);
-  })
-}
+const taskDataBase = new TaskDatabase();
+const view = new View();
+const viewModel = new ViewModel(taskDataBase);
 
 document.addEventListener("DOMContentLoaded", (event) => {
-  bindData();
+  bindData(view, viewModel);
 })
