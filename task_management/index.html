@@ -7,23 +7,64 @@
 
   <style>
     .new-task-container {
-      display: block;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: end;
+      gap: 10px 20px;
+      /* margin: 10px; */
+      padding: 15px;
+
+      width: 33%;
+      /* box-sizing: content-box; */
+    }
+
+    .new-task-container > * {
+      display: inline;
+
+      /* box-sizing: content-box; */
+    }
+
+    .title-field-container {
+      justify-content: center;
+      /* display: inline; */
+      /* box-sizing: border-box; */
+    }
+
+    .title-input {
+      /* display: inline; */
+    }
+
+    .description-input {
+      /* display: inline; */
+    }
+
+    .input {
+      padding: 15px;
+      width: max-content;
+      margin: 0;
+    }
+
+
+    .add-task-button {
+      width: 60px;
+      max-width: 60px;
     }
   </style>
 </head>
 <body>
   <div class="new-task-container">
     <div class="title-field-container">
-      <label">Title</label>
-      <input type="text" id="title">
+      <!-- <label">Title</label> -->
+      <input class="title-input input" type="text" id="title" placeholder="Title">
     </div>
 
     <div class="description-field-container">
-      <label">Description</label>
-      <input type="text" id="description">
+      <!-- <label">Description</label> -->
+      <input class="description-input input" type="text" id="description" placeholder="Description">
     </div>
 
-    <button id="add-task">Add Task</button>
+    <button class="add-task-button" id="add-task">Add Task</button>
   </div>
 
   <div class="task-list-container">

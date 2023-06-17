@@ -1,13 +1,27 @@
-// note: this is not real mvvm, a binder tool is required to achieve mvvm architecture
+// note: this is not real mvvm, a binder tool is required to achieve mvvm architecture.
+// note: apperantly the view should have access to viewmodel but viewmodel shouldn't have access to view.
+// note: view directly binds to viewmodels properties, and viewmodel has "property changed" event listeners
+// note: and when a property changes, it updates the view with event handlers.
+// note: also to keep in mind, the model is usually on another machine, like a server and/or database,
+// note: and viewmodel is the so called "live data", the representation of the real data on client
+// note: i could also implement it with getter setters, and i should've but i chose to do it with
+// note: event listeners
 
 // model
 class Task {
+  public isDone: boolean;
   constructor(
     public title: string, 
     public description: string,
     public creationTime: Date,
     public deadline: Date | null,
-  ) {}
+  ) {
+    this.isDone = false;
+  }
+
+  public markAsDone(): void {
+    this.isDone = true;
+  }
 }
 
 class TaskDatabase {
@@ -23,6 +37,10 @@ class TaskDatabase {
 
   get_tasks(): Task[] {
     return this.tasks;
+  }
+
+  get_a_task(taskTitle: string): Task {
+    return this.tasks.filter(t => t.title === taskTitle)[0];
   }
 }
 
@@ -80,15 +98,18 @@ class ViewModel {
       if (this.eventTasksToDisplay) {
         callback();
         this.eventTasksToDisplay = !this.eventTasksToDisplay;
-        console.log("event listened")
       }
     }, 50);
   }
 
   private pingEventTasksToListen(): void {
-    console.log("pinged")
     this.eventTasksToDisplay = true;
-    console.log(this.eventTasksToDisplay)
+  }
+
+  public markTaskAsDone(taskTitle: string): void {
+    const task = this.taskDataBase.get_a_task(taskTitle);
+    task.markAsDone();
+    this.tasksToDisplay;
   }
 }
 
@@ -98,15 +119,17 @@ class View {
   public descriptionInputElement: HTMLInputElement;
   public addTaskButton: HTMLButtonElement;
   public taskListElement: HTMLUListElement;
+  public elementsToAddEventListenerTo: HTMLElement[];
 
   constructor() {
     this.titleInputElement = document.querySelector("#title") as HTMLInputElement;
     this.descriptionInputElement = document.querySelector("#description") as HTMLInputElement;
     this.addTaskButton = document.querySelector("#add-task") as HTMLButtonElement;
     this.taskListElement = document.querySelector(".task-list") as HTMLUListElement;
+    this.elementsToAddEventListenerTo = [];
   }
 
-  public static createTaskElement(task: Task): HTMLElement {
+  public createTaskElement(task: Task): HTMLElement {
     const taskElement = document.createElement("div");
     taskElement.setAttribute("class", "task");
 
@@ -118,18 +141,42 @@ class View {
     taskDescriptionElement.setAttribute("class", "task-description");
     taskDescriptionElement.textContent = task.description;
 
+    const taskCreationDateElement = document.createElement("div");
+    taskCreationDateElement.setAttribute("class", "task-creation-date");
+    const dateString = task.creationTime.toLocaleDateString("en-US", {
+      hour: "numeric", minute: "numeric", day: "numeric", weekday: "long", month: "short"
+    });
+    taskCreationDateElement.textContent = dateString;
+
+    const taskIsDoneElement = document.createElement("div");
+    taskIsDoneElement.setAttribute("class", "task-is-done");
+    if (task.isDone) {
+      taskIsDoneElement.textContent = "Completed";
+    } else {
+      taskIsDoneElement.textContent = "Ongoing";
+    }
+
+    const taskMarkAsDoneButton = document.createElement("button");
+    taskMarkAsDoneButton.setAttribute("class", "task-mark-as-done");
+    taskMarkAsDoneButton.setAttribute("id", task.title);
+    taskMarkAsDoneButton.textContent = "Mark As Done";
+    this.elementsToAddEventListenerTo.push(taskMarkAsDoneButton);
+
     taskElement.appendChild(taskTitleElement);
     taskElement.appendChild(taskDescriptionElement);
+    taskElement.appendChild(taskCreationDateElement);
+    taskElement.appendChild(taskIsDoneElement);
+    taskElement.appendChild(taskMarkAsDoneButton);
 
     return taskElement;
   }
 
-  renderTasks(tasksToDisplay: Task[]): void {
+  public renderTasks(tasksToDisplay: Task[]): void {
     while (this.taskListElement.firstChild) {
       this.taskListElement.firstChild.remove();
     }
     for (const task of tasksToDisplay) {
-      const taskElement = View.createTaskElement(task);
+      const taskElement = this.createTaskElement(task);
       this.taskListElement.appendChild(taskElement);
       console.log(task)
     }
@@ -138,9 +185,32 @@ class View {
 
 
 const bindData = (view: View, viewModel: ViewModel) => {
+  const callbacks = {
+    task_mark_as_done: {
+      eventType: "click",
+      callback: (button: HTMLElement) => {
+        return () => {
+          viewModel.markTaskAsDone(button.id);
+        }
+      }
+    }
+  }
+
   viewModel.eventListenerTasksToDisplay(() => {
     view.renderTasks(viewModel.tasksToDisplay);
   })
+
+  setInterval(() => {
+    if (view.elementsToAddEventListenerTo.length > 0) {
+      // const elementList = view.elementsToAddEventListenerTo;
+      // for (const element of elementList) {
+      const element = view.elementsToAddEventListenerTo.pop();
+      const subscript = element.className.replace(/-/gi, "_");
+      const callbackObj = callbacks[subscript];
+      element.addEventListener(callbackObj.eventType, callbackObj.callback(element));
+      // }
+    }
+  }, 50)
 
   view.titleInputElement.addEventListener("input", (event) => {
     viewModel.title = view.titleInputElement.value;
