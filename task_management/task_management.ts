@@ -9,19 +9,62 @@
 
 // model
 class Task {
+  public title: string;
+  public description: string;
+  public creationTime: Date;
+
+  constructor(
+    title: string, 
+    description: string,
+    creationTime: Date,
+  ) {
+    this.title = title;
+    this.description = description;
+    this.creationTime = creationTime;
+  }
+}
+
+class CompletableTask extends Task {
   public isDone: boolean;
   constructor(
-    public title: string, 
-    public description: string,
-    public creationTime: Date,
-    public deadline: Date | null,
-  ) {
-    this.isDone = false;
+    title: string, 
+    description: string,
+    creationTime: Date,) {
+      super(title, description, creationTime);
+      this.isDone = false;
   }
 
   public markAsDone(): void {
     this.isDone = true;
   }
+}
+
+class CompletableTaskWithDeadline extends CompletableTask {
+  public deadline: Date;
+  // public ongoing: boolean;
+  constructor(
+    title: string, 
+    description: string,
+    creationTime: Date,
+    deadline: Date) {
+      super(title, description, creationTime);
+      if (deadline.getTime() < this.creationTime.getTime()) {
+        throw new Error("deadline is before creation time");
+      }
+      this.deadline = deadline;
+      // this.ongoing = true;
+    }
+
+    public checkOngoing(): boolean {
+      if (this.deadline.getTime() <= new Date().getTime()) {
+        return false;
+      }
+      return true;
+    }
+
+    // public updateOngoing(): void {
+    //   this.ongoing = this.checkOngoing();
+    // }
 }
 
 class TaskDatabase {
@@ -129,8 +172,8 @@ class View {
     this.elementsToAddEventListenerTo = [];
   }
 
-  public createTaskElement(task: Task): HTMLElement {
-    const taskElement = document.createElement("div");
+  public createNormalTaskElement(task: Task): HTMLElement {
+    const taskElement = document.createElement("li");
     taskElement.setAttribute("class", "task");
 
     const taskTitleElement = document.createElement("div");
@@ -171,6 +214,103 @@ class View {
     return taskElement;
   }
 
+  public createCompletableTaskElement(task: Task): HTMLElement {
+    const taskElement = document.createElement("li");
+    taskElement.setAttribute("class", "task");
+
+    const taskTitleElement = document.createElement("div");
+    taskTitleElement.setAttribute("class", "task-title");
+    taskTitleElement.textContent = task.title;
+
+    const taskDescriptionElement = document.createElement("div");
+    taskDescriptionElement.setAttribute("class", "task-description");
+    taskDescriptionElement.textContent = task.description;
+
+    const taskCreationDateElement = document.createElement("div");
+    taskCreationDateElement.setAttribute("class", "task-creation-date");
+    const dateString = task.creationTime.toLocaleDateString("en-US", {
+      hour: "numeric", minute: "numeric", day: "numeric", weekday: "long", month: "short"
+    });
+    taskCreationDateElement.textContent = dateString;
+
+    const taskIsDoneElement = document.createElement("div");
+    taskIsDoneElement.setAttribute("class", "task-is-done");
+    if (task.isDone) {
+      taskIsDoneElement.textContent = "Completed";
+    } else {
+      taskIsDoneElement.textContent = "Ongoing";
+    }
+
+    const taskMarkAsDoneButton = document.createElement("button");
+    taskMarkAsDoneButton.setAttribute("class", "task-mark-as-done");
+    taskMarkAsDoneButton.setAttribute("id", task.title);
+    taskMarkAsDoneButton.textContent = "Mark As Done";
+    this.elementsToAddEventListenerTo.push(taskMarkAsDoneButton);
+
+    taskElement.appendChild(taskTitleElement);
+    taskElement.appendChild(taskDescriptionElement);
+    taskElement.appendChild(taskCreationDateElement);
+    taskElement.appendChild(taskIsDoneElement);
+    taskElement.appendChild(taskMarkAsDoneButton);
+
+    return taskElement;
+  }
+
+  public createCompletableWithDeadlineTaskElement(task: Task): HTMLElement {
+    const taskElement = document.createElement("li");
+    taskElement.setAttribute("class", "task");
+
+    const taskTitleElement = document.createElement("div");
+    taskTitleElement.setAttribute("class", "task-title");
+    taskTitleElement.textContent = task.title;
+
+    const taskDescriptionElement = document.createElement("div");
+    taskDescriptionElement.setAttribute("class", "task-description");
+    taskDescriptionElement.textContent = task.description;
+
+    const taskCreationDateElement = document.createElement("div");
+    taskCreationDateElement.setAttribute("class", "task-creation-date");
+    const dateString = task.creationTime.toLocaleDateString("en-US", {
+      hour: "numeric", minute: "numeric", day: "numeric", weekday: "long", month: "short"
+    });
+    taskCreationDateElement.textContent = dateString;
+
+    const taskIsDoneElement = document.createElement("div");
+    taskIsDoneElement.setAttribute("class", "task-is-done");
+    if (task.isDone) {
+      taskIsDoneElement.textContent = "Completed";
+    } else {
+      taskIsDoneElement.textContent = "Ongoing";
+    }
+
+    const taskMarkAsDoneButton = document.createElement("button");
+    taskMarkAsDoneButton.setAttribute("class", "task-mark-as-done");
+    taskMarkAsDoneButton.setAttribute("id", task.title);
+    taskMarkAsDoneButton.textContent = "Mark As Done";
+    this.elementsToAddEventListenerTo.push(taskMarkAsDoneButton);
+
+    taskElement.appendChild(taskTitleElement);
+    taskElement.appendChild(taskDescriptionElement);
+    taskElement.appendChild(taskCreationDateElement);
+    taskElement.appendChild(taskIsDoneElement);
+    taskElement.appendChild(taskMarkAsDoneButton);
+
+    return taskElement;
+  }
+
+  public createTaskElement(task: Task): HTMLElement {
+    if (task instanceof Task) {
+      return this.createNormalTaskElement(task);
+    }
+    if (task instanceof CompletableTask) {
+      return this.createCompletableTaskElement(task);
+    }
+    if (task instanceof CompletableTaskWithDeadline) {
+      return this.createCompletableWithDeadlineTaskElement(task);
+    }
+    throw new Error("couldn't match task type")
+  }
+
   public renderTasks(tasksToDisplay: Task[]): void {
     while (this.taskListElement.firstChild) {
       this.taskListElement.firstChild.remove();
@@ -182,7 +322,6 @@ class View {
     }
   }
 }
-
 
 const bindData = (view: View, viewModel: ViewModel) => {
   const callbacks = {
