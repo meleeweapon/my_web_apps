@@ -34,16 +34,30 @@ class CompletableTaskWithDeadline extends CompletableTask {
         this.deadline = deadline;
         // this.ongoing = true;
     }
-    checkOngoing() {
+    isOngoing() {
         if (this.deadline.getTime() <= new Date().getTime()) {
             return false;
         }
         return true;
     }
+    markAsDone() {
+        if (!this.isOngoing()) {
+            return;
+        }
+        super.markAsDone();
+    }
 }
 class TaskDatabase {
     constructor() {
-        this.tasks = [new Task("jfdkslall", "jfkdlsaş", new Date(), null)];
+        const creation = new Date();
+        creation.setSeconds(creation.getSeconds() - 10);
+        const deadline = new Date();
+        deadline.setMinutes(deadline.getMinutes(), deadline.getSeconds() + 1);
+        this.tasks = [
+            new Task("jfdkslall", "jfkdlsaş", new Date()),
+            new CompletableTask("completable task", "this is a completable task here.", new Date()),
+            new CompletableTaskWithDeadline("completable task with deadline", "this is a completable task here.", new Date(), deadline),
+        ];
     }
     add_task(task) {
         this.tasks.push(task);
@@ -86,7 +100,7 @@ class ViewModel {
         this._tasksToDisplay = tasksToDisplay;
     }
     saveTask() {
-        const task = new Task(this.title, this.description, new Date(), null);
+        const task = new Task(this.title, this.description, new Date());
         this.taskDataBase.add_task(task);
         this.tasksToDisplay;
     }
@@ -107,6 +121,9 @@ class ViewModel {
     }
     markTaskAsDone(taskTitle) {
         const task = this.taskDataBase.get_a_task(taskTitle);
+        if (!(task instanceof CompletableTask) && !(task instanceof CompletableTaskWithDeadline)) {
+            return;
+        }
         task.markAsDone();
         this.tasksToDisplay;
     }
@@ -134,24 +151,9 @@ class View {
             hour: "numeric", minute: "numeric", day: "numeric", weekday: "long", month: "short"
         });
         taskCreationDateElement.textContent = dateString;
-        const taskIsDoneElement = document.createElement("div");
-        taskIsDoneElement.setAttribute("class", "task-is-done");
-        if (task.isDone) {
-            taskIsDoneElement.textContent = "Completed";
-        }
-        else {
-            taskIsDoneElement.textContent = "Ongoing";
-        }
-        const taskMarkAsDoneButton = document.createElement("button");
-        taskMarkAsDoneButton.setAttribute("class", "task-mark-as-done");
-        taskMarkAsDoneButton.setAttribute("id", task.title);
-        taskMarkAsDoneButton.textContent = "Mark As Done";
-        this.elementsToAddEventListenerTo.push(taskMarkAsDoneButton);
         taskElement.appendChild(taskTitleElement);
         taskElement.appendChild(taskDescriptionElement);
         taskElement.appendChild(taskCreationDateElement);
-        taskElement.appendChild(taskIsDoneElement);
-        taskElement.appendChild(taskMarkAsDoneButton);
         return taskElement;
     }
     createCompletableTaskElement(task) {
@@ -181,7 +183,9 @@ class View {
         taskMarkAsDoneButton.setAttribute("class", "task-mark-as-done");
         taskMarkAsDoneButton.setAttribute("id", task.title);
         taskMarkAsDoneButton.textContent = "Mark As Done";
-        this.elementsToAddEventListenerTo.push(taskMarkAsDoneButton);
+        this.elementsToAddEventListenerTo.push({ element: taskMarkAsDoneButton, behaviour: "completable" });
+        if (task.isDone)
+            taskMarkAsDoneButton.setAttribute("disabled", "true");
         taskElement.appendChild(taskTitleElement);
         taskElement.appendChild(taskDescriptionElement);
         taskElement.appendChild(taskCreationDateElement);
@@ -204,35 +208,54 @@ class View {
             hour: "numeric", minute: "numeric", day: "numeric", weekday: "long", month: "short"
         });
         taskCreationDateElement.textContent = dateString;
+        const taskDeadlineDateElement = document.createElement("div");
+        taskDeadlineDateElement.setAttribute("class", "task-deadline-date");
+        const deadlineDateString = task.deadline.toLocaleDateString("en-US", {
+            hour: "numeric", minute: "numeric", day: "numeric", weekday: "long", month: "short"
+        });
+        taskDeadlineDateElement.textContent = deadlineDateString;
         const taskIsDoneElement = document.createElement("div");
         taskIsDoneElement.setAttribute("class", "task-is-done");
         if (task.isDone) {
             taskIsDoneElement.textContent = "Completed";
         }
         else {
-            taskIsDoneElement.textContent = "Ongoing";
+            if (!task.isOngoing()) {
+                taskIsDoneElement.textContent = "Missed";
+            }
+            else {
+                taskIsDoneElement.textContent = "Ongoing";
+            }
         }
         const taskMarkAsDoneButton = document.createElement("button");
         taskMarkAsDoneButton.setAttribute("class", "task-mark-as-done");
         taskMarkAsDoneButton.setAttribute("id", task.title);
         taskMarkAsDoneButton.textContent = "Mark As Done";
-        this.elementsToAddEventListenerTo.push(taskMarkAsDoneButton);
+        if (!task.isOngoing() || task.isDone) {
+            taskMarkAsDoneButton.setAttribute("disabled", "true");
+        }
+        this.elementsToAddEventListenerTo.push({
+            element: taskMarkAsDoneButton, behaviour: "completableWithDeadline"
+        });
         taskElement.appendChild(taskTitleElement);
         taskElement.appendChild(taskDescriptionElement);
         taskElement.appendChild(taskCreationDateElement);
         taskElement.appendChild(taskIsDoneElement);
         taskElement.appendChild(taskMarkAsDoneButton);
+        taskElement.appendChild(taskDeadlineDateElement);
         return taskElement;
     }
     createTaskElement(task) {
-        if (task instanceof Task) {
-            return this.createNormalTaskElement(task);
-        }
-        if (task instanceof CompletableTask) {
-            return this.createCompletableTaskElement(task);
-        }
         if (task instanceof CompletableTaskWithDeadline) {
             return this.createCompletableWithDeadlineTaskElement(task);
+        }
+        if (task instanceof CompletableTask) {
+            console.log("conple");
+            return this.createCompletableTaskElement(task);
+        }
+        if (task instanceof Task) {
+            console.log("fjdkslajşfdklsaş");
+            return this.createNormalTaskElement(task);
         }
         throw new Error("couldn't match task type");
     }
@@ -249,7 +272,15 @@ class View {
 }
 const bindData = (view, viewModel) => {
     const callbacks = {
-        task_mark_as_done: {
+        completable: {
+            eventType: "click",
+            callback: (button) => {
+                return () => {
+                    viewModel.markTaskAsDone(button.id);
+                };
+            }
+        },
+        completableWithDeadline: {
             eventType: "click",
             callback: (button) => {
                 return () => {
@@ -265,8 +296,10 @@ const bindData = (view, viewModel) => {
         if (view.elementsToAddEventListenerTo.length > 0) {
             // const elementList = view.elementsToAddEventListenerTo;
             // for (const element of elementList) {
-            const element = view.elementsToAddEventListenerTo.pop();
-            const subscript = element.className.replace(/-/gi, "_");
+            const elementObj = view.elementsToAddEventListenerTo.pop();
+            const element = elementObj === null || elementObj === void 0 ? void 0 : elementObj.element;
+            // const subscript = element.className.replace(/-/gi, "_");
+            const subscript = elementObj === null || elementObj === void 0 ? void 0 : elementObj.behaviour;
             const callbackObj = callbacks[subscript];
             element.addEventListener(callbackObj.eventType, callbackObj.callback(element));
             // }
