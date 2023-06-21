@@ -6,23 +6,52 @@
   <title>Task Manager</title>
 
   <style>
+    body {
+      background: linear-gradient(to top left, #00ffcc 0%, #3366ff 100%);
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .new-task-and-task-type-container {
+      display: flex;
+      background: linear-gradient(to top left, #3366ff 0%, #00c3ff 100%);
+      border: 1px solid black;
+      border-radius: 20px;
+      justify-content: space-evenly;
+      width: 500px;
+    }
+
+    .task-type-choice {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-evenly;
+      font-size: large;
+    }
+
     .new-task-container {
       display: flex;
       flex-direction: column;
       justify-content: center;
-      align-items: end;
+      align-items: center;
       gap: 10px 20px;
       /* margin: 10px; */
       padding: 15px;
 
-      width: 33%;
+      width: 250px;
       /* box-sizing: content-box; */
+
     }
 
     .new-task-container > * {
       display: inline;
 
       /* box-sizing: content-box; */
+    }
+
+    .add-task-button-container {
+      width: 203px;
+      height: 49px;
+      align-items: end;
     }
 
     .title-field-container {
@@ -49,10 +78,33 @@
     .add-task-button {
       width: 60px;
       max-width: 60px;
+      display: inline;
+      float: right;
     }
 
     .task {
       border: 2px solid black;
+      /* background: linear-gradient(to top left, #009933 0%, #66ff66 100%); */
+      background: linear-gradient(to top left, #b8c9d4 0%, #7fd4f1 100%);
+
+      padding: 20px;
+      border-radius: 20px;
+      border-top: none;
+      border-left: none;
+      font-size: large;
+    }
+
+    .task-title {
+      font-size: x-large;
+      margin-bottom: 10px;
+    }
+
+    .task-description {
+      margin-bottom: 5px;
+    }
+
+    .task-creation-date {
+      font-size:medium;
     }
 
     .task:not(:last-child) {
@@ -61,18 +113,40 @@
   </style>
 </head>
 <body>
-  <div class="new-task-container">
-    <div class="title-field-container">
-      <!-- <label">Title</label> -->
-      <input class="title-input input" type="text" id="title" placeholder="Title">
-    </div>
+  <div class="new-task-and-task-type-container">
+    <form action="" class="task-type-choice">
+      <div>
+        <input type="radio" id="normal-task-type-radio" name="task-type" value="normal-task">
+        <label for="normal-task-type-radio">Task</label>
+      </div>
 
-    <div class="description-field-container">
-      <!-- <label">Description</label> -->
-      <input class="description-input input" type="text" id="description" placeholder="Description">
-    </div>
+      <div>
+        <input type="radio" id="completable-task-type-radio" name="task-type" value="completable-task">
+        <label for="completable-task-type-radio">Completable Task</label>
+      </div>
 
-    <button class="add-task-button" id="add-task">Add Task</button>
+      <div>
+        <input type="radio" id="deadlined-task-type-radio" name="task-type" value="deadlined-task">
+        <label for="deadlined-task-type-radio">Deadlined Task</label>
+      </div>
+
+    </form>
+
+    <div class="new-task-container">
+      <div class="title-field-container">
+        <!-- <label">Title</label> -->
+        <input class="title-input input" type="text" id="title" placeholder="Title">
+      </div>
+
+      <div class="description-field-container">
+        <!-- <label">Description</label> -->
+        <input class="description-input input" type="text" id="description" placeholder="Description">
+      </div>
+
+      <div class="add-task-button-container">
+        <button class="add-task-button" id="add-task">Add Task</button>
+      </div>
+    </div>
   </div>
 
   <div class="task-list-container">
