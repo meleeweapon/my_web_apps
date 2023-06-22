@@ -18,7 +18,8 @@
       border: 1px solid black;
       border-radius: 20px;
       justify-content: space-evenly;
-      width: 500px;
+      width: 700px;
+      align-items: center;
     }
 
     .task-type-choice {
@@ -110,13 +111,18 @@
     .task:not(:last-child) {
       margin-bottom: 20px;
     }
+
+    .task-list {
+      list-style-type: none;
+      padding-left: 0;
+    }
   </style>
 </head>
 <body>
   <div class="new-task-and-task-type-container">
     <form action="" class="task-type-choice">
       <div>
-        <input type="radio" id="normal-task-type-radio" name="task-type" value="normal-task">
+        <input type="radio" id="normal-task-type-radio" name="task-type" value="normal-task" checked="checked">
         <label for="normal-task-type-radio">Task</label>
       </div>
 
@@ -146,6 +152,10 @@
       <div class="add-task-button-container">
         <button class="add-task-button" id="add-task">Add Task</button>
       </div>
+    </div>
+
+    <div>
+      <input type="datetime-local" id="deadline-date">
     </div>
   </div>
 

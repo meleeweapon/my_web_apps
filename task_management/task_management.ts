@@ -104,22 +104,39 @@ class TaskDatabase {
   }
 }
 
+type TaskType = "normal" | "completable" | "deadlined";
 // viewmodel
 class ViewModel {
   private _title: string;
   private _description: string;
   private _tasksToDisplay: Task[];
+  private _taskType: TaskType;
+  private _date: Date;
   private taskDataBase: TaskDatabase;
   private eventTasksToDisplay: boolean;
 
   constructor(taskDataBase: TaskDatabase) {
     this.title = "";
     this.description = "";
+    this.taskType = "normal";
+    this.date = new Date();
     this.taskDataBase = taskDataBase;
     this.eventTasksToDisplay = false;
     this.fetchTasksToDisplay();
   }
 
+  public get date(): Date {
+    return this._date;
+  }
+  public set date(dateArg) {
+    this._date = dateArg;
+  }
+  public get taskType(): TaskType {
+    return this._taskType;
+  }
+  public set taskType(taskType) {
+    this._taskType = taskType;
+  }
   public get title(): string {
     return this._title;
   }
@@ -143,8 +160,28 @@ class ViewModel {
     this._tasksToDisplay = tasksToDisplay;
   }
 
+  public dateToValue(date: Date): string {
+    return `${date.getFullYear()}-${date.toLocaleDateString("en-US", {month: "2-digit"})}-${date.toLocaleDateString("en-US", {day: "2-digit"})}T${date.getHours()}:${date.getMinutes()}`;
+  }
+  public valueToDate(value: string): Date {
+    return new Date(value);
+  }
+
   public saveTask(): void {
-    const task = new Task(this.title, this.description, new Date());
+    let task;
+    if (this.taskType === "normal") {
+      task = new Task(this.title, this.description, new Date());
+    } else if (this.taskType === "completable") {
+      task = new CompletableTask(this.title, this.description, new Date());
+    } else if (this.taskType === "deadlined") {
+      task = new CompletableTaskWithDeadline(this.title, this.description, new Date(), this._date);
+    } else {
+      throw new Error("unexpected taskType");
+    }
+    if (!task) {
+      throw new Error("task not valid");
+    }
+
     this.taskDataBase.add_task(task);
     this.tasksToDisplay;
   }
@@ -184,12 +221,16 @@ class View {
   public taskListElement: HTMLUListElement;
   public elementsToAddEventListenerTo: {
     element: HTMLElement, behaviour: "completable" | "completableWithDeadline"}[];
+  public taskTypeFormElement: HTMLFormElement;
+  public deadlineDateInputElement: HTMLInputElement;
 
   constructor() {
     this.titleInputElement = document.querySelector("#title") as HTMLInputElement;
     this.descriptionInputElement = document.querySelector("#description") as HTMLInputElement;
     this.addTaskButton = document.querySelector("#add-task") as HTMLButtonElement;
     this.taskListElement = document.querySelector(".task-list") as HTMLUListElement;
+    this.taskTypeFormElement = document.querySelector(".task-type-choice") as HTMLFormElement;
+    this.deadlineDateInputElement = document.querySelector("#deadline-date") as HTMLInputElement;
     this.elementsToAddEventListenerTo = [];
   }
 
@@ -326,11 +367,9 @@ class View {
       return this.createCompletableWithDeadlineTaskElement(task);
     }
     if (task instanceof CompletableTask) {
-      console.log("conple");
       return this.createCompletableTaskElement(task);
     }
     if (task instanceof Task) {
-      console.log("fjdkslajşfdklsaş");
       return this.createNormalTaskElement(task);
     }
     throw new Error("couldn't match task type")
@@ -343,7 +382,6 @@ class View {
     for (const task of tasksToDisplay) {
       const taskElement = this.createTaskElement(task);
       this.taskListElement.appendChild(taskElement);
-      console.log(task)
     }
   }
 }
@@ -386,6 +424,10 @@ const bindData = (view: View, viewModel: ViewModel) => {
     }
   }, 50)
 
+  setInterval(() => {
+    view.renderTasks(viewModel.tasksToDisplay);
+  }, 1000)
+
   view.titleInputElement.addEventListener("input", (event) => {
     viewModel.title = view.titleInputElement.value;
   })
@@ -398,6 +440,22 @@ const bindData = (view: View, viewModel: ViewModel) => {
     viewModel.saveTask();
   })
 
+  const idToTaskType = {
+    "normal-task-type-radio": "normal",
+    "completable-task-type-radio": "completable",
+    "deadlined-task-type-radio": "deadlined",
+  }
+
+  view.taskTypeFormElement.addEventListener("input", event => {
+    viewModel.taskType = idToTaskType[event.target.id];
+  })
+
+  view.deadlineDateInputElement.addEventListener("input", event => {
+    // viewModel.date = event.
+    viewModel.date = viewModel.valueToDate(view.deadlineDateInputElement.value);
+  })
+
+  view.deadlineDateInputElement.value = viewModel.dateToValue(viewModel.date);
 }
 
 // class EventListener {

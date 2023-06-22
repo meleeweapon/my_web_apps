@@ -74,9 +74,23 @@ class ViewModel {
     constructor(taskDataBase) {
         this.title = "";
         this.description = "";
+        this.taskType = "normal";
+        this.date = new Date();
         this.taskDataBase = taskDataBase;
         this.eventTasksToDisplay = false;
         this.fetchTasksToDisplay();
+    }
+    get date() {
+        return this._date;
+    }
+    set date(dateArg) {
+        this._date = dateArg;
+    }
+    get taskType() {
+        return this._taskType;
+    }
+    set taskType(taskType) {
+        this._taskType = taskType;
     }
     get title() {
         return this._title;
@@ -99,8 +113,29 @@ class ViewModel {
         // use the getter
         this._tasksToDisplay = tasksToDisplay;
     }
+    dateToValue(date) {
+        return `${date.getFullYear()}-${date.toLocaleDateString("en-US", { month: "2-digit" })}-${date.toLocaleDateString("en-US", { day: "2-digit" })}T${date.getHours()}:${date.getMinutes()}`;
+    }
+    valueToDate(value) {
+        return new Date(value);
+    }
     saveTask() {
-        const task = new Task(this.title, this.description, new Date());
+        let task;
+        if (this.taskType === "normal") {
+            task = new Task(this.title, this.description, new Date());
+        }
+        else if (this.taskType === "completable") {
+            task = new CompletableTask(this.title, this.description, new Date());
+        }
+        else if (this.taskType === "deadlined") {
+            task = new CompletableTaskWithDeadline(this.title, this.description, new Date(), this._date);
+        }
+        else {
+            throw new Error("unexpected taskType");
+        }
+        if (!task) {
+            throw new Error("task not valid");
+        }
         this.taskDataBase.add_task(task);
         this.tasksToDisplay;
     }
@@ -134,6 +169,8 @@ class View {
         this.descriptionInputElement = document.querySelector("#description");
         this.addTaskButton = document.querySelector("#add-task");
         this.taskListElement = document.querySelector(".task-list");
+        this.taskTypeFormElement = document.querySelector(".task-type-choice");
+        this.deadlineDateInputElement = document.querySelector("#deadline-date");
         this.elementsToAddEventListenerTo = [];
     }
     createNormalTaskElement(task) {
@@ -250,11 +287,9 @@ class View {
             return this.createCompletableWithDeadlineTaskElement(task);
         }
         if (task instanceof CompletableTask) {
-            console.log("conple");
             return this.createCompletableTaskElement(task);
         }
         if (task instanceof Task) {
-            console.log("fjdkslajşfdklsaş");
             return this.createNormalTaskElement(task);
         }
         throw new Error("couldn't match task type");
@@ -266,7 +301,6 @@ class View {
         for (const task of tasksToDisplay) {
             const taskElement = this.createTaskElement(task);
             this.taskListElement.appendChild(taskElement);
-            console.log(task);
         }
     }
 }
@@ -305,6 +339,9 @@ const bindData = (view, viewModel) => {
             // }
         }
     }, 50);
+    setInterval(() => {
+        view.renderTasks(viewModel.tasksToDisplay);
+    }, 1000);
     view.titleInputElement.addEventListener("input", (event) => {
         viewModel.title = view.titleInputElement.value;
     });
@@ -314,6 +351,19 @@ const bindData = (view, viewModel) => {
     view.addTaskButton.addEventListener("click", (event) => {
         viewModel.saveTask();
     });
+    const idToTaskType = {
+        "normal-task-type-radio": "normal",
+        "completable-task-type-radio": "completable",
+        "deadlined-task-type-radio": "deadlined",
+    };
+    view.taskTypeFormElement.addEventListener("input", event => {
+        viewModel.taskType = idToTaskType[event.target.id];
+    });
+    view.deadlineDateInputElement.addEventListener("input", event => {
+        // viewModel.date = event.
+        viewModel.date = viewModel.valueToDate(view.deadlineDateInputElement.value);
+    });
+    view.deadlineDateInputElement.value = viewModel.dateToValue(viewModel.date);
 };
 // class EventListener {
 //   private tasksToDisplayEvent: boolean;
