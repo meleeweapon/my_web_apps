@@ -104,7 +104,15 @@ class TaskDatabase {
   }
 }
 
+  interface saveTaskResult {
+    success: boolean,
+    info: Error;
+  }
+
 type TaskType = "normal" | "completable" | "deadlined";
+
+
+// there should've been more than one viewmodel, for task and task list
 // viewmodel
 class ViewModel {
   private _title: string;
@@ -112,69 +120,98 @@ class ViewModel {
   private _tasksToDisplay: Task[];
   private _taskType: TaskType;
   private _date: Date;
+  private _saveable: boolean;
   private taskDataBase: TaskDatabase;
   private eventTasksToDisplay: boolean;
+  private eventTaskType: boolean;
+  private eventSaveable: boolean;
 
   constructor(taskDataBase: TaskDatabase) {
     this.title = "";
     this.description = "";
-    this.taskType = "normal";
     this.date = new Date();
+    this.taskType = "normal";
+    this.saveable = true;
     this.taskDataBase = taskDataBase;
     this.eventTasksToDisplay = false;
+    this.eventTaskType = false;
+    this.eventSaveable = false;
     this.fetchTasksToDisplay();
   }
 
+  public get saveable(): boolean {
+    return this._saveable;
+  }
+  public set saveable(state: boolean) {
+    this._saveable = state;
+    this.pingEventSaveable();
+  }
   public get date(): Date {
     return this._date;
   }
   public set date(dateArg) {
     this._date = dateArg;
+    this.updateSaveable()
   }
   public get taskType(): TaskType {
     return this._taskType;
   }
-  public set taskType(taskType) {
-    this._taskType = taskType;
+  public set taskType(type: TaskType) {
+    this._taskType = type;
+    this.pingEventTaskType();
+    this.updateSaveable()
   }
   public get title(): string {
     return this._title;
   }
-  public set title(title) {
-    this._title = title;
+  public set title(value: string) {
+    this._title = value;
     // this.callbacks["title"]();
   }
   public get description(): string {
     return this._description;
   }
-  public set description(description) {
-    this._description = description;
+  public set description(value: string) {
+    this._description = value;
   }
   public get tasksToDisplay(): Task[] {
     this.fetchTasksToDisplay();
     return this._tasksToDisplay;
   }
-  public set tasksToDisplay(tasksToDisplay) {
-
+  public set tasksToDisplay(tasksList: Task[]) {
     // use the getter
-    this._tasksToDisplay = tasksToDisplay;
+    this._tasksToDisplay = tasksList;
   }
 
   public dateToValue(date: Date): string {
-    return `${date.getFullYear()}-${date.toLocaleDateString("en-US", {month: "2-digit"})}-${date.toLocaleDateString("en-US", {day: "2-digit"})}T${date.getHours()}:${date.getMinutes()}`;
+    return date.toISOString().split(".")[0];
   }
   public valueToDate(value: string): Date {
     return new Date(value);
   }
 
+  public isSaveable(): boolean {
+    if (this.date.getTime() < new Date().getTime()) {
+      return false;
+    }
+    return true;
+  }
+  public updateSaveable(): void {
+    this.saveable = this.isSaveable();
+  }
+
   public saveTask(): void {
+    if (!this.saveable) {
+      return;
+    }
+
     let task;
     if (this.taskType === "normal") {
       task = new Task(this.title, this.description, new Date());
     } else if (this.taskType === "completable") {
       task = new CompletableTask(this.title, this.description, new Date());
     } else if (this.taskType === "deadlined") {
-      task = new CompletableTaskWithDeadline(this.title, this.description, new Date(), this._date);
+      task = new CompletableTaskWithDeadline(this.title, this.description, new Date(), this.date);
     } else {
       throw new Error("unexpected taskType");
     }
@@ -187,7 +224,7 @@ class ViewModel {
   }
   private fetchTasksToDisplay(): void {
     this._tasksToDisplay = this.taskDataBase.get_tasks();
-    this.pingEventTasksToListen();
+    this.pingEventTasksToDisplay();
   }
 
   public eventListenerTasksToDisplay(callback: Function): void {
@@ -198,9 +235,31 @@ class ViewModel {
       }
     }, 50);
   }
+  public eventListenerTaskType(callback: Function): void {
+    setInterval(() => {
+      if (this.eventTaskType) {
+        callback();
+        this.eventTaskType = !this.eventTaskType;
+      }
+    }, 50);
+  }
+  public eventListenerSaveable(callback: Function): void {
+    setInterval(() => {
+      if (this.eventSaveable) {
+        callback();
+        this.eventSaveable = !this.eventSaveable;
+      }
+    }, 50);
+  }
 
-  private pingEventTasksToListen(): void {
+  private pingEventTasksToDisplay(): void {
     this.eventTasksToDisplay = true;
+  }
+  private pingEventTaskType(): void {
+    this.eventTaskType = true;
+  }
+  private pingEventSaveable(): void {
+    this.eventSaveable = true;
   }
 
   public markTaskAsDone(taskTitle: string): void {
@@ -223,6 +282,7 @@ class View {
     element: HTMLElement, behaviour: "completable" | "completableWithDeadline"}[];
   public taskTypeFormElement: HTMLFormElement;
   public deadlineDateInputElement: HTMLInputElement;
+  public dateErrorMessageElement: HTMLElement;
 
   constructor() {
     this.titleInputElement = document.querySelector("#title") as HTMLInputElement;
@@ -231,6 +291,7 @@ class View {
     this.taskListElement = document.querySelector(".task-list") as HTMLUListElement;
     this.taskTypeFormElement = document.querySelector(".task-type-choice") as HTMLFormElement;
     this.deadlineDateInputElement = document.querySelector("#deadline-date") as HTMLInputElement;
+    this.dateErrorMessageElement = document.querySelector(".date-error-message") as HTMLElement;
     this.elementsToAddEventListenerTo = [];
   }
 
@@ -384,6 +445,26 @@ class View {
       this.taskListElement.appendChild(taskElement);
     }
   }
+
+  public disableDeadlineDateInputElement(): void {
+    view.deadlineDateInputElement.setAttribute("disabled", "true");
+  }
+  public enableDeadlineDateInputElement(): void {
+    view.deadlineDateInputElement.removeAttribute("disabled");
+  }
+
+  public hideDateErrorMessageElement(): void {
+    this.dateErrorMessageElement.setAttribute("class", "date-error-message hidden")
+  }
+  public exposeDateErrorMessageElement(): void {
+    this.dateErrorMessageElement.setAttribute("class", "date-error-message")
+  }
+  public setDateErrorMessage(message: string): void {
+    this.dateErrorMessageElement.textContent = message;
+  }
+  public getDateErrorMessage(): string {
+    return this.dateErrorMessageElement.textContent;
+  }
 }
 
 const bindData = (view: View, viewModel: ViewModel) => {
@@ -408,6 +489,29 @@ const bindData = (view: View, viewModel: ViewModel) => {
 
   viewModel.eventListenerTasksToDisplay(() => {
     view.renderTasks(viewModel.tasksToDisplay);
+  })
+
+  viewModel.eventListenerTaskType(() => {
+    if (viewModel.taskType === "deadlined") {
+      view.enableDeadlineDateInputElement();
+    } else {
+      view.disableDeadlineDateInputElement();
+    }
+  })
+
+  viewModel.eventListenerSaveable(() => {
+    if (!viewModel.saveable) {
+      if (viewModel.taskType === "deadlined") {
+        view.setDateErrorMessage("• Date should be in a further date");
+        view.exposeDateErrorMessageElement();
+      } else {
+        view.setDateErrorMessage("");
+        view.hideDateErrorMessageElement();
+      }
+    } else {
+      view.setDateErrorMessage("");
+      view.hideDateErrorMessageElement();
+    }
   })
 
   setInterval(() => {
@@ -438,6 +542,14 @@ const bindData = (view: View, viewModel: ViewModel) => {
 
   view.addTaskButton.addEventListener("click", (event) => {
     viewModel.saveTask();
+    // try {
+    //   viewModel.saveTask();
+    //   view.hideDateErrorMessageElement();
+    //   view.setDateErrorMessage("");
+    // } catch (error) {
+    //   view.exposeDateErrorMessageElement();
+    //   view.setDateErrorMessage(error);
+    // }
   })
 
   const idToTaskType = {

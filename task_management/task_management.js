@@ -69,57 +69,83 @@ class TaskDatabase {
         return this.tasks.filter(t => t.title === taskTitle)[0];
     }
 }
+// there should've been more than one viewmodel, for task and task list
 // viewmodel
 class ViewModel {
     constructor(taskDataBase) {
         this.title = "";
         this.description = "";
-        this.taskType = "normal";
         this.date = new Date();
+        this.taskType = "normal";
+        this.saveable = true;
         this.taskDataBase = taskDataBase;
         this.eventTasksToDisplay = false;
+        this.eventTaskType = false;
+        this.eventSaveable = false;
         this.fetchTasksToDisplay();
+    }
+    get saveable() {
+        return this._saveable;
+    }
+    set saveable(state) {
+        this._saveable = state;
+        this.pingEventSaveable();
     }
     get date() {
         return this._date;
     }
     set date(dateArg) {
         this._date = dateArg;
+        this.updateSaveable();
     }
     get taskType() {
         return this._taskType;
     }
-    set taskType(taskType) {
-        this._taskType = taskType;
+    set taskType(type) {
+        this._taskType = type;
+        this.pingEventTaskType();
+        this.updateSaveable();
     }
     get title() {
         return this._title;
     }
-    set title(title) {
-        this._title = title;
+    set title(value) {
+        this._title = value;
         // this.callbacks["title"]();
     }
     get description() {
         return this._description;
     }
-    set description(description) {
-        this._description = description;
+    set description(value) {
+        this._description = value;
     }
     get tasksToDisplay() {
         this.fetchTasksToDisplay();
         return this._tasksToDisplay;
     }
-    set tasksToDisplay(tasksToDisplay) {
+    set tasksToDisplay(tasksList) {
         // use the getter
-        this._tasksToDisplay = tasksToDisplay;
+        this._tasksToDisplay = tasksList;
     }
     dateToValue(date) {
-        return `${date.getFullYear()}-${date.toLocaleDateString("en-US", { month: "2-digit" })}-${date.toLocaleDateString("en-US", { day: "2-digit" })}T${date.getHours()}:${date.getMinutes()}`;
+        return date.toISOString().split(".")[0];
     }
     valueToDate(value) {
         return new Date(value);
     }
+    isSaveable() {
+        if (this.date.getTime() < new Date().getTime()) {
+            return false;
+        }
+        return true;
+    }
+    updateSaveable() {
+        this.saveable = this.isSaveable();
+    }
     saveTask() {
+        if (!this.saveable) {
+            return;
+        }
         let task;
         if (this.taskType === "normal") {
             task = new Task(this.title, this.description, new Date());
@@ -128,7 +154,7 @@ class ViewModel {
             task = new CompletableTask(this.title, this.description, new Date());
         }
         else if (this.taskType === "deadlined") {
-            task = new CompletableTaskWithDeadline(this.title, this.description, new Date(), this._date);
+            task = new CompletableTaskWithDeadline(this.title, this.description, new Date(), this.date);
         }
         else {
             throw new Error("unexpected taskType");
@@ -141,7 +167,7 @@ class ViewModel {
     }
     fetchTasksToDisplay() {
         this._tasksToDisplay = this.taskDataBase.get_tasks();
-        this.pingEventTasksToListen();
+        this.pingEventTasksToDisplay();
     }
     eventListenerTasksToDisplay(callback) {
         setInterval(() => {
@@ -151,8 +177,30 @@ class ViewModel {
             }
         }, 50);
     }
-    pingEventTasksToListen() {
+    eventListenerTaskType(callback) {
+        setInterval(() => {
+            if (this.eventTaskType) {
+                callback();
+                this.eventTaskType = !this.eventTaskType;
+            }
+        }, 50);
+    }
+    eventListenerSaveable(callback) {
+        setInterval(() => {
+            if (this.eventSaveable) {
+                callback();
+                this.eventSaveable = !this.eventSaveable;
+            }
+        }, 50);
+    }
+    pingEventTasksToDisplay() {
         this.eventTasksToDisplay = true;
+    }
+    pingEventTaskType() {
+        this.eventTaskType = true;
+    }
+    pingEventSaveable() {
+        this.eventSaveable = true;
     }
     markTaskAsDone(taskTitle) {
         const task = this.taskDataBase.get_a_task(taskTitle);
@@ -171,6 +219,7 @@ class View {
         this.taskListElement = document.querySelector(".task-list");
         this.taskTypeFormElement = document.querySelector(".task-type-choice");
         this.deadlineDateInputElement = document.querySelector("#deadline-date");
+        this.dateErrorMessageElement = document.querySelector(".date-error-message");
         this.elementsToAddEventListenerTo = [];
     }
     createNormalTaskElement(task) {
@@ -303,6 +352,24 @@ class View {
             this.taskListElement.appendChild(taskElement);
         }
     }
+    disableDeadlineDateInputElement() {
+        view.deadlineDateInputElement.setAttribute("disabled", "true");
+    }
+    enableDeadlineDateInputElement() {
+        view.deadlineDateInputElement.removeAttribute("disabled");
+    }
+    hideDateErrorMessageElement() {
+        this.dateErrorMessageElement.setAttribute("class", "date-error-message hidden");
+    }
+    exposeDateErrorMessageElement() {
+        this.dateErrorMessageElement.setAttribute("class", "date-error-message");
+    }
+    setDateErrorMessage(message) {
+        this.dateErrorMessageElement.textContent = message;
+    }
+    getDateErrorMessage() {
+        return this.dateErrorMessageElement.textContent;
+    }
 }
 const bindData = (view, viewModel) => {
     const callbacks = {
@@ -325,6 +392,30 @@ const bindData = (view, viewModel) => {
     };
     viewModel.eventListenerTasksToDisplay(() => {
         view.renderTasks(viewModel.tasksToDisplay);
+    });
+    viewModel.eventListenerTaskType(() => {
+        if (viewModel.taskType === "deadlined") {
+            view.enableDeadlineDateInputElement();
+        }
+        else {
+            view.disableDeadlineDateInputElement();
+        }
+    });
+    viewModel.eventListenerSaveable(() => {
+        if (!viewModel.saveable) {
+            if (viewModel.taskType === "deadlined") {
+                view.setDateErrorMessage("• Date should be in a further date");
+                view.exposeDateErrorMessageElement();
+            }
+            else {
+                view.setDateErrorMessage("");
+                view.hideDateErrorMessageElement();
+            }
+        }
+        else {
+            view.setDateErrorMessage("");
+            view.hideDateErrorMessageElement();
+        }
     });
     setInterval(() => {
         if (view.elementsToAddEventListenerTo.length > 0) {
@@ -350,6 +441,14 @@ const bindData = (view, viewModel) => {
     });
     view.addTaskButton.addEventListener("click", (event) => {
         viewModel.saveTask();
+        // try {
+        //   viewModel.saveTask();
+        //   view.hideDateErrorMessageElement();
+        //   view.setDateErrorMessage("");
+        // } catch (error) {
+        //   view.exposeDateErrorMessageElement();
+        //   view.setDateErrorMessage(error);
+        // }
     });
     const idToTaskType = {
         "normal-task-type-radio": "normal",

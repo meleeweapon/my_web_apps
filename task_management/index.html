@@ -116,6 +116,15 @@
       list-style-type: none;
       padding-left: 0;
     }
+
+    .date-error-message {
+      color: rgb(166, 10, 10);
+      font-weight: bold;
+    }
+
+    .hidden {
+      visibility: hidden;
+    }
   </style>
 </head>
 <body>
@@ -155,7 +164,8 @@
     </div>
 
     <div>
-      <input type="datetime-local" id="deadline-date">
+      <div class="date-error-message"></div>
+      <input type="datetime-local" id="deadline-date" disabled>
     </div>
   </div>
 
