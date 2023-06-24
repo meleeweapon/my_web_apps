@@ -119,7 +119,7 @@ class ViewModel {
   private _description: string;
   private _tasksToDisplay: Task[];
   private _taskType: TaskType;
-  private _date: Date;
+  private _date: Date | null;
   private _saveable: boolean;
   private taskDataBase: TaskDatabase;
   private eventTasksToDisplay: boolean;
@@ -129,7 +129,7 @@ class ViewModel {
   constructor(taskDataBase: TaskDatabase) {
     this.title = "";
     this.description = "";
-    this.date = new Date();
+    this.date = null;
     this.taskType = "normal";
     this.saveable = true;
     this.taskDataBase = taskDataBase;
@@ -146,7 +146,7 @@ class ViewModel {
     this._saveable = state;
     this.pingEventSaveable();
   }
-  public get date(): Date {
+  public get date(): Date | null {
     return this._date;
   }
   public set date(dateArg) {
@@ -183,14 +183,17 @@ class ViewModel {
     this._tasksToDisplay = tasksList;
   }
 
-  public dateToValue(date: Date): string {
+  public dateToValue(date: Date | null): string {
+    if (!date) { return ""; }
     return date.toISOString().split(".")[0];
   }
-  public valueToDate(value: string): Date {
+  public valueToDate(value: string): Date | null {
+    if (value === "") { return null; }
     return new Date(value);
   }
 
   public isSaveable(): boolean {
+    if (!this.date) { return false; }
     if (this.date.getTime() < new Date().getTime()) {
       return false;
     }
@@ -283,6 +286,7 @@ class View {
   public taskTypeFormElement: HTMLFormElement;
   public deadlineDateInputElement: HTMLInputElement;
   public dateErrorMessageElement: HTMLElement;
+  public eventElementsToAddEventListenerTo: boolean;
 
   constructor() {
     this.titleInputElement = document.querySelector("#title") as HTMLInputElement;
@@ -293,6 +297,15 @@ class View {
     this.deadlineDateInputElement = document.querySelector("#deadline-date") as HTMLInputElement;
     this.dateErrorMessageElement = document.querySelector(".date-error-message") as HTMLElement;
     this.elementsToAddEventListenerTo = [];
+    this.eventElementsToAddEventListenerTo = false;
+  }
+
+  public eventListenerElementsToAddEventListenerTo(callback: Function): void {
+    setInterval(() => {
+      if (this.elementsToAddEventListenerTo.length > 0) {
+        callback();
+      }
+    }, 50);
   }
 
   public createNormalTaskElement(task: Task): HTMLElement {
@@ -453,17 +466,20 @@ class View {
     view.deadlineDateInputElement.removeAttribute("disabled");
   }
 
-  public hideDateErrorMessageElement(): void {
+  public hideDateErrorMessageElement(message?: string): void {
+    if (message !== undefined) { this.setDateErrorMessage(message); }
     this.dateErrorMessageElement.setAttribute("class", "date-error-message hidden")
   }
-  public exposeDateErrorMessageElement(): void {
+  public exposeDateErrorMessageElement(message?: string): void {
+    if (message !== undefined) { this.setDateErrorMessage(message); }
     this.dateErrorMessageElement.setAttribute("class", "date-error-message")
   }
   public setDateErrorMessage(message: string): void {
     this.dateErrorMessageElement.textContent = message;
   }
   public getDateErrorMessage(): string {
-    return this.dateErrorMessageElement.textContent;
+    const msg = this.dateErrorMessageElement.textContent;
+    return msg ? msg : "";
   }
 }
 
@@ -481,6 +497,7 @@ const bindData = (view: View, viewModel: ViewModel) => {
       eventType: "click",
       callback: (button: HTMLElement) => {
         return () => {
+          console.log("compwitded callback");
           viewModel.markTaskAsDone(button.id);
         }
       }
@@ -502,8 +519,11 @@ const bindData = (view: View, viewModel: ViewModel) => {
   viewModel.eventListenerSaveable(() => {
     if (!viewModel.saveable) {
       if (viewModel.taskType === "deadlined") {
-        view.setDateErrorMessage("• Date should be in a further date");
-        view.exposeDateErrorMessageElement();
+        if (!viewModel.date) {
+          view.exposeDateErrorMessageElement("• Please enter a date.");
+        } else {
+          view.exposeDateErrorMessageElement("• Date should be in a further date.");
+        }
       } else {
         view.setDateErrorMessage("");
         view.hideDateErrorMessageElement();
@@ -514,19 +534,16 @@ const bindData = (view: View, viewModel: ViewModel) => {
     }
   })
 
-  setInterval(() => {
-    if (view.elementsToAddEventListenerTo.length > 0) {
-      // const elementList = view.elementsToAddEventListenerTo;
-      // for (const element of elementList) {
-      const elementObj = view.elementsToAddEventListenerTo.pop();
-      const element = elementObj?.element;
-      // const subscript = element.className.replace(/-/gi, "_");
-      const subscript = elementObj?.behaviour;
-      const callbackObj = callbacks[subscript];
-      element.addEventListener(callbackObj.eventType, callbackObj.callback(element));
-      // }
-    }
-  }, 50)
+  view.eventListenerElementsToAddEventListenerTo(() => {
+    if (view.elementsToAddEventListenerTo.length <= 0) { return; }
+    const elementObj = view.elementsToAddEventListenerTo.pop();
+    const element = elementObj?.element;
+    if (element === undefined) { throw new Error("element was undefined"); }
+    const subscript = elementObj?.behaviour;
+    if (subscript === undefined) { throw new Error("subscript was undefined"); }
+    const callbackObj = callbacks[subscript];
+    element.addEventListener("click", callbackObj.callback(element));
+  })
 
   setInterval(() => {
     view.renderTasks(viewModel.tasksToDisplay);
@@ -542,24 +559,22 @@ const bindData = (view: View, viewModel: ViewModel) => {
 
   view.addTaskButton.addEventListener("click", (event) => {
     viewModel.saveTask();
-    // try {
-    //   viewModel.saveTask();
-    //   view.hideDateErrorMessageElement();
-    //   view.setDateErrorMessage("");
-    // } catch (error) {
-    //   view.exposeDateErrorMessageElement();
-    //   view.setDateErrorMessage(error);
-    // }
-  })
-
-  const idToTaskType = {
-    "normal-task-type-radio": "normal",
-    "completable-task-type-radio": "completable",
-    "deadlined-task-type-radio": "deadlined",
-  }
+  )
 
   view.taskTypeFormElement.addEventListener("input", event => {
-    viewModel.taskType = idToTaskType[event.target.id];
+    switch (event?.target?.id) {
+      case "normal-task-type-radio":
+        viewModel.taskType = "normal";
+        break;
+      case "completable-task-type-radio":
+        viewModel.taskType = "completable";
+        break;
+      case "deadlined-task-type-radio":
+        viewModel.taskType = "deadlined";
+        break;
+      default:
+        throw new Error("couldn't match event target id");
+    }
   })
 
   view.deadlineDateInputElement.addEventListener("input", event => {

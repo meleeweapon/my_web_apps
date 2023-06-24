@@ -75,7 +75,7 @@ class ViewModel {
     constructor(taskDataBase) {
         this.title = "";
         this.description = "";
-        this.date = new Date();
+        this.date = null;
         this.taskType = "normal";
         this.saveable = true;
         this.taskDataBase = taskDataBase;
@@ -128,12 +128,21 @@ class ViewModel {
         this._tasksToDisplay = tasksList;
     }
     dateToValue(date) {
+        if (!date) {
+            return "";
+        }
         return date.toISOString().split(".")[0];
     }
     valueToDate(value) {
+        if (value === "") {
+            return null;
+        }
         return new Date(value);
     }
     isSaveable() {
+        if (!this.date) {
+            return false;
+        }
         if (this.date.getTime() < new Date().getTime()) {
             return false;
         }
@@ -221,6 +230,14 @@ class View {
         this.deadlineDateInputElement = document.querySelector("#deadline-date");
         this.dateErrorMessageElement = document.querySelector(".date-error-message");
         this.elementsToAddEventListenerTo = [];
+        this.eventElementsToAddEventListenerTo = false;
+    }
+    eventListenerElementsToAddEventListenerTo(callback) {
+        setInterval(() => {
+            if (this.elementsToAddEventListenerTo.length > 0) {
+                callback();
+            }
+        }, 50);
     }
     createNormalTaskElement(task) {
         const taskElement = document.createElement("li");
@@ -358,17 +375,24 @@ class View {
     enableDeadlineDateInputElement() {
         view.deadlineDateInputElement.removeAttribute("disabled");
     }
-    hideDateErrorMessageElement() {
+    hideDateErrorMessageElement(message) {
+        if (message !== undefined) {
+            this.setDateErrorMessage(message);
+        }
         this.dateErrorMessageElement.setAttribute("class", "date-error-message hidden");
     }
-    exposeDateErrorMessageElement() {
+    exposeDateErrorMessageElement(message) {
+        if (message !== undefined) {
+            this.setDateErrorMessage(message);
+        }
         this.dateErrorMessageElement.setAttribute("class", "date-error-message");
     }
     setDateErrorMessage(message) {
         this.dateErrorMessageElement.textContent = message;
     }
     getDateErrorMessage() {
-        return this.dateErrorMessageElement.textContent;
+        const msg = this.dateErrorMessageElement.textContent;
+        return msg ? msg : "";
     }
 }
 const bindData = (view, viewModel) => {
@@ -385,6 +409,7 @@ const bindData = (view, viewModel) => {
             eventType: "click",
             callback: (button) => {
                 return () => {
+                    console.log("compwitded callback");
                     viewModel.markTaskAsDone(button.id);
                 };
             }
@@ -404,8 +429,12 @@ const bindData = (view, viewModel) => {
     viewModel.eventListenerSaveable(() => {
         if (!viewModel.saveable) {
             if (viewModel.taskType === "deadlined") {
-                view.setDateErrorMessage("• Date should be in a further date");
-                view.exposeDateErrorMessageElement();
+                if (!viewModel.date) {
+                    view.exposeDateErrorMessageElement("• Please enter a date.");
+                }
+                else {
+                    view.exposeDateErrorMessageElement("• Date should be in a further date.");
+                }
             }
             else {
                 view.setDateErrorMessage("");
@@ -417,19 +446,22 @@ const bindData = (view, viewModel) => {
             view.hideDateErrorMessageElement();
         }
     });
-    setInterval(() => {
-        if (view.elementsToAddEventListenerTo.length > 0) {
-            // const elementList = view.elementsToAddEventListenerTo;
-            // for (const element of elementList) {
-            const elementObj = view.elementsToAddEventListenerTo.pop();
-            const element = elementObj === null || elementObj === void 0 ? void 0 : elementObj.element;
-            // const subscript = element.className.replace(/-/gi, "_");
-            const subscript = elementObj === null || elementObj === void 0 ? void 0 : elementObj.behaviour;
-            const callbackObj = callbacks[subscript];
-            element.addEventListener(callbackObj.eventType, callbackObj.callback(element));
-            // }
+    view.eventListenerElementsToAddEventListenerTo(() => {
+        if (view.elementsToAddEventListenerTo.length <= 0) {
+            return;
         }
-    }, 50);
+        const elementObj = view.elementsToAddEventListenerTo.pop();
+        const element = elementObj === null || elementObj === void 0 ? void 0 : elementObj.element;
+        if (element === undefined) {
+            throw new Error("element was undefined");
+        }
+        const subscript = elementObj === null || elementObj === void 0 ? void 0 : elementObj.behaviour;
+        if (subscript === undefined) {
+            throw new Error("subscript was undefined");
+        }
+        const callbackObj = callbacks[subscript];
+        element.addEventListener("click", callbackObj.callback(element));
+    });
     setInterval(() => {
         view.renderTasks(viewModel.tasksToDisplay);
     }, 1000);
@@ -441,22 +473,22 @@ const bindData = (view, viewModel) => {
     });
     view.addTaskButton.addEventListener("click", (event) => {
         viewModel.saveTask();
-        // try {
-        //   viewModel.saveTask();
-        //   view.hideDateErrorMessageElement();
-        //   view.setDateErrorMessage("");
-        // } catch (error) {
-        //   view.exposeDateErrorMessageElement();
-        //   view.setDateErrorMessage(error);
-        // }
     });
-    const idToTaskType = {
-        "normal-task-type-radio": "normal",
-        "completable-task-type-radio": "completable",
-        "deadlined-task-type-radio": "deadlined",
-    };
     view.taskTypeFormElement.addEventListener("input", event => {
-        viewModel.taskType = idToTaskType[event.target.id];
+        var _a;
+        switch ((_a = event === null || event === void 0 ? void 0 : event.target) === null || _a === void 0 ? void 0 : _a.id) {
+            case "normal-task-type-radio":
+                viewModel.taskType = "normal";
+                break;
+            case "completable-task-type-radio":
+                viewModel.taskType = "completable";
+                break;
+            case "deadlined-task-type-radio":
+                viewModel.taskType = "deadlined";
+                break;
+            default:
+                throw new Error("couldn't match event target id");
+        }
     });
     view.deadlineDateInputElement.addEventListener("input", event => {
         // viewModel.date = event.
