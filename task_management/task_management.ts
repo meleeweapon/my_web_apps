@@ -92,6 +92,7 @@ class TaskDatabase {
   }
 
   add_task(task: Task): void {
+    if (!this.title_is_valid(task.title)) { throw new Error("title is not unique"); }
     this.tasks.push(task);
   }
 
@@ -99,8 +100,13 @@ class TaskDatabase {
     return this.tasks;
   }
 
-  get_a_task(taskTitle: string): Task {
-    return this.tasks.filter(t => t.title === taskTitle)[0];
+  title_is_valid(title: string): boolean {
+    return this.get_a_task(title) === null;
+  }
+
+  get_a_task(taskTitle: string): Task | null {
+    const matches = this.tasks.filter(t => t.title === taskTitle);
+    return matches.length > 0 ? matches[0] : null;
   }
 }
 
@@ -127,12 +133,12 @@ class ViewModel {
   private eventSaveable: boolean;
 
   constructor(taskDataBase: TaskDatabase) {
+    this.taskDataBase = taskDataBase;
     this.title = "";
     this.description = "";
     this.date = null;
     this.taskType = "normal";
     this.saveable = true;
-    this.taskDataBase = taskDataBase;
     this.eventTasksToDisplay = false;
     this.eventTaskType = false;
     this.eventSaveable = false;
@@ -166,6 +172,7 @@ class ViewModel {
   }
   public set title(value: string) {
     this._title = value;
+    this.updateSaveable();
     // this.callbacks["title"]();
   }
   public get description(): string {
@@ -193,14 +200,22 @@ class ViewModel {
   }
 
   public isSaveable(): boolean {
-    if (!this.date) { return false; }
-    if (this.date.getTime() < new Date().getTime()) {
+    if (this.taskType === "deadlined") {
+      if (!this.date) { return false; }
+      if (this.date.getTime() < new Date().getTime()) {
+        return false;
+      }
+    }
+    if (!this.validTitle(this.title)) {
       return false;
     }
     return true;
   }
   public updateSaveable(): void {
     this.saveable = this.isSaveable();
+  }
+  public validTitle(title: string): boolean {
+    return this.taskDataBase.title_is_valid(title);
   }
 
   public saveTask(): void {
@@ -214,6 +229,7 @@ class ViewModel {
     } else if (this.taskType === "completable") {
       task = new CompletableTask(this.title, this.description, new Date());
     } else if (this.taskType === "deadlined") {
+      if (!this.date) { throw new Error("date was null"); }
       task = new CompletableTaskWithDeadline(this.title, this.description, new Date(), this.date);
     } else {
       throw new Error("unexpected taskType");
@@ -222,6 +238,7 @@ class ViewModel {
       throw new Error("task not valid");
     }
 
+    if (!this.validTitle(this.title)) { return; }
     this.taskDataBase.add_task(task);
     this.tasksToDisplay;
   }
@@ -267,6 +284,7 @@ class ViewModel {
 
   public markTaskAsDone(taskTitle: string): void {
     const task = this.taskDataBase.get_a_task(taskTitle);
+    if (task === null) { throw new Error("couldn't find task in db"); }
     if (!(task instanceof CompletableTask) && !(task instanceof CompletableTaskWithDeadline)) {
       return;
     }
@@ -308,9 +326,28 @@ class View {
     }, 50);
   }
 
-  public createNormalTaskElement(task: Task): HTMLElement {
+  private createTaskRootElement(task: Task | CompletableTask | CompletableTaskWithDeadline): HTMLElement {
+    let classString = "task";
     const taskElement = document.createElement("li");
-    taskElement.setAttribute("class", "task");
+    if (task instanceof CompletableTask) {
+      if (task.isDone) {
+        classString = "task completed";
+      } else {
+        if (task instanceof CompletableTaskWithDeadline) {
+          if (!task.isOngoing()) {
+            classString = "task missed";
+          }
+        }
+      }
+    }
+    taskElement.setAttribute("class", classString);
+    return taskElement;
+  }
+
+  public createNormalTaskElement(task: Task): HTMLElement {
+    // const taskElement = document.createElement("li");
+    // taskElement.setAttribute("class", "task");
+    const taskElement = this.createTaskRootElement(task);
 
     const taskTitleElement = document.createElement("div");
     taskTitleElement.setAttribute("class", "task-title");
@@ -335,8 +372,9 @@ class View {
   }
 
   public createCompletableTaskElement(task: CompletableTask): HTMLElement {
-    const taskElement = document.createElement("li");
-    taskElement.setAttribute("class", "task");
+    // const taskElement = document.createElement("li");
+    // taskElement.setAttribute("class", "task");
+    const taskElement = this.createTaskRootElement(task);
 
     const taskTitleElement = document.createElement("div");
     taskTitleElement.setAttribute("class", "task-title");
@@ -379,8 +417,9 @@ class View {
   }
 
   public createCompletableWithDeadlineTaskElement(task: CompletableTaskWithDeadline): HTMLElement {
-    const taskElement = document.createElement("li");
-    taskElement.setAttribute("class", "task");
+    // const taskElement = document.createElement("li");
+    // taskElement.setAttribute("class", "task");
+    const taskElement = this.createTaskRootElement(task);
 
     const taskTitleElement = document.createElement("div");
     taskTitleElement.setAttribute("class", "task-title");
@@ -481,6 +520,13 @@ class View {
     const msg = this.dateErrorMessageElement.textContent;
     return msg ? msg : "";
   }
+
+  public setTaskToCompleted(task: HTMLElement): void {
+    task.setAttribute("class", "task completed");
+  }
+  public setTaskToMissed(task: HTMLElement): void {
+    task.setAttribute("class", "task missed");
+  }
 }
 
 const bindData = (view: View, viewModel: ViewModel) => {
@@ -518,19 +564,19 @@ const bindData = (view: View, viewModel: ViewModel) => {
 
   viewModel.eventListenerSaveable(() => {
     if (!viewModel.saveable) {
+      if (!viewModel.validTitle(viewModel.title)) {
+        view.exposeDateErrorMessageElement("• Title should be unique.");
+      }
       if (viewModel.taskType === "deadlined") {
         if (!viewModel.date) {
           view.exposeDateErrorMessageElement("• Please enter a date.");
         } else {
+          if (viewModel.date.getTime() <= new Date().getTime())
           view.exposeDateErrorMessageElement("• Date should be in a further date.");
         }
-      } else {
-        view.setDateErrorMessage("");
-        view.hideDateErrorMessageElement();
       }
     } else {
-      view.setDateErrorMessage("");
-      view.hideDateErrorMessageElement();
+      view.hideDateErrorMessageElement("");
     }
   })
 
@@ -559,7 +605,7 @@ const bindData = (view: View, viewModel: ViewModel) => {
 
   view.addTaskButton.addEventListener("click", (event) => {
     viewModel.saveTask();
-  )
+  })
 
   view.taskTypeFormElement.addEventListener("input", event => {
     switch (event?.target?.id) {
@@ -578,28 +624,11 @@ const bindData = (view: View, viewModel: ViewModel) => {
   })
 
   view.deadlineDateInputElement.addEventListener("input", event => {
-    // viewModel.date = event.
     viewModel.date = viewModel.valueToDate(view.deadlineDateInputElement.value);
   })
 
   view.deadlineDateInputElement.value = viewModel.dateToValue(viewModel.date);
 }
-
-// class EventListener {
-//   private tasksToDisplayEvent: boolean;
-//   private tasksToDisplayCallback: Function;
-
-//   constructor(tasksToDisplayCallback: Function) {
-//     this.tasksToDisplayEvent = false;
-//     this.tasksToDisplayCallback = tasksToDisplayCallback;
-//     setInterval(() => {
-//       if (this.tasksToDisplayEvent) {
-//         this.tasksToDisplayCallback();
-//         this.tasksToDisplayEvent = !this.tasksToDisplayEvent;
-//       }
-//     }, 50)
-//   }
-// }
 
 const taskDataBase = new TaskDatabase();
 const view = new View();
