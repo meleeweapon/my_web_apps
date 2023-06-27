@@ -7,6 +7,7 @@
 // note: and viewmodel is the so called "live data", the representation of the real data on client
 // note: i could also implement it with getter setters, and i should've but i chose to do it with
 // note: event listeners
+// next up: impl deleting tasks
 // model
 class Task {
     constructor(title, description, creationTime) {
@@ -16,9 +17,12 @@ class Task {
     }
 }
 class CompletableTask extends Task {
-    constructor(title, description, creationTime) {
+    constructor(title, description, creationTime, isDone) {
         super(title, description, creationTime);
         this.isDone = false;
+        if (isDone !== undefined) {
+            this.isDone = isDone;
+        }
     }
     markAsDone() {
         this.isDone = true;
@@ -26,8 +30,8 @@ class CompletableTask extends Task {
 }
 class CompletableTaskWithDeadline extends CompletableTask {
     // public ongoing: boolean;
-    constructor(title, description, creationTime, deadline) {
-        super(title, description, creationTime);
+    constructor(title, description, creationTime, deadline, isDone) {
+        super(title, description, creationTime, isDone);
         if (deadline.getTime() < this.creationTime.getTime()) {
             throw new Error("deadline is before creation time");
         }
@@ -47,23 +51,77 @@ class CompletableTaskWithDeadline extends CompletableTask {
         super.markAsDone();
     }
 }
+// class TaskDatabase {
+//   public tasks: Task[];
+//   constructor() {
+//     const creation = new Date()
+//     creation.setSeconds(creation.getSeconds() - 10);
+//     const deadline = new Date();
+//     deadline.setMinutes(deadline.getMinutes(), deadline.getSeconds() + 1);
+//     this.tasks = [
+//       new Task("jfdkslall", "jfkdlsaş", new Date()),
+//       new CompletableTask("completable task", "this is a completable task here.", new Date()),
+//       new CompletableTaskWithDeadline(
+//         "completable task with deadline", "this is a completable task here.", new Date(), deadline
+//       ),
+//     ];
+//   }
+//   add_task(task: Task): void {
+//     if (!this.title_is_valid(task.title)) { throw new Error("title is not unique"); }
+//     this.tasks.push(task);
+//   }
+//   get_tasks(): Task[] {
+//     return this.tasks;
+//   }
+//   title_is_valid(title: string): boolean {
+//     return this.get_a_task(title) === null;
+//   }
+//   get_a_task(taskTitle: string): Task | null {
+//     const matches = this.tasks.filter(t => t.title === taskTitle);
+//     return matches.length > 0 ? matches[0] : null;
+//   }
+// }
 class TaskDatabase {
-    constructor() {
-        const creation = new Date();
-        creation.setSeconds(creation.getSeconds() - 10);
-        const deadline = new Date();
-        deadline.setMinutes(deadline.getMinutes(), deadline.getSeconds() + 1);
-        this.tasks = [
-            new Task("jfdkslall", "jfkdlsaş", new Date()),
-            new CompletableTask("completable task", "this is a completable task here.", new Date()),
-            new CompletableTaskWithDeadline("completable task with deadline", "this is a completable task here.", new Date(), deadline),
-        ];
+    constructor(localStrg) {
+        this.tasksKey = "tasks";
+        this.localStrg = localStrg;
+        let rawData = localStrg.getItem(this.tasksKey);
+        // if (rawData === null) { throw new Error("rawData was null"); }
+        if (rawData === null) {
+            this.localStrg.setItem(this.tasksKey, JSON.stringify([]));
+            rawData = localStrg.getItem(this.tasksKey);
+        }
+        const tasksData = JSON.parse(rawData);
+        this.tasks = this.reconstruct_instances(tasksData);
+    }
+    mark_as_done(title) {
+        const task = this.get_a_task(title);
+        if (task === null) {
+            throw new Error("task was null");
+        }
+        if (!("isDone" in task)) {
+            throw new Error("task did not contain isDone");
+        }
+        task.markAsDone();
+        this.localStrg.setItem(this.tasksKey, JSON.stringify(this.tasks));
+    }
+    reconstruct_instances(tasksData) {
+        return tasksData.map(dataObj => {
+            if ("deadline" in dataObj) {
+                return new CompletableTaskWithDeadline(dataObj.title, dataObj.description, new Date(dataObj.creationTime), new Date(dataObj.deadline), dataObj.isDone);
+            }
+            if ("isDone" in dataObj) {
+                return new CompletableTask(dataObj.title, dataObj.description, new Date(dataObj.creationTime), dataObj.isDone);
+            }
+            return new Task(dataObj.title, dataObj.description, new Date(dataObj.creationTime));
+        });
     }
     add_task(task) {
         if (!this.title_is_valid(task.title)) {
             throw new Error("title is not unique");
         }
         this.tasks.push(task);
+        this.localStrg.setItem(this.tasksKey, JSON.stringify(this.tasks));
     }
     get_tasks() {
         return this.tasks;
@@ -241,7 +299,8 @@ class ViewModel {
         if (!(task instanceof CompletableTask) && !(task instanceof CompletableTaskWithDeadline)) {
             return;
         }
-        task.markAsDone();
+        // task.markAsDone();
+        this.taskDataBase.mark_as_done(taskTitle);
         this.tasksToDisplay;
     }
 }
@@ -546,7 +605,7 @@ const bindData = (view, viewModel) => {
     });
     view.deadlineDateInputElement.value = viewModel.dateToValue(viewModel.date);
 };
-const taskDataBase = new TaskDatabase();
+const taskDataBase = new TaskDatabase(localStorage);
 const view = new View();
 const viewModel = new ViewModel(taskDataBase);
 document.addEventListener("DOMContentLoaded", (event) => {
