@@ -74,47 +74,8 @@ class CompletableTaskWithDeadline extends CompletableTask {
       }
       super.markAsDone();
     }
-
-    // public updateOngoing(): void {
-    //   this.ongoing = this.checkOngoing();
-    // }
 }
 
-// class TaskDatabase {
-//   public tasks: Task[];
-
-//   constructor() {
-//     const creation = new Date()
-//     creation.setSeconds(creation.getSeconds() - 10);
-//     const deadline = new Date();
-//     deadline.setMinutes(deadline.getMinutes(), deadline.getSeconds() + 1);
-//     this.tasks = [
-//       new Task("jfdkslall", "jfkdlsaş", new Date()),
-//       new CompletableTask("completable task", "this is a completable task here.", new Date()),
-//       new CompletableTaskWithDeadline(
-//         "completable task with deadline", "this is a completable task here.", new Date(), deadline
-//       ),
-//     ];
-//   }
-
-//   add_task(task: Task): void {
-//     if (!this.title_is_valid(task.title)) { throw new Error("title is not unique"); }
-//     this.tasks.push(task);
-//   }
-
-//   get_tasks(): Task[] {
-//     return this.tasks;
-//   }
-
-//   title_is_valid(title: string): boolean {
-//     return this.get_a_task(title) === null;
-//   }
-
-//   get_a_task(taskTitle: string): Task | null {
-//     const matches = this.tasks.filter(t => t.title === taskTitle);
-//     return matches.length > 0 ? matches[0] : null;
-//   }
-// }
 
 class TaskDatabase {
   public tasks: Task[];
@@ -133,11 +94,23 @@ class TaskDatabase {
     this.tasks = this.reconstruct_instances(tasksData);
   }
 
+  delete_task(title: string): void {
+    const task = this.get_a_task(title);
+    if (task === null) { throw new Error("task was null"); }
+    const taskIndex = this.tasks.indexOf(task);
+    this.tasks.splice(taskIndex, 1);
+    this.save_to_local_storage();
+  }
+
   mark_as_done(title: string): void {
     const task = this.get_a_task(title) as CompletableTask;
     if (task === null) { throw new Error("task was null"); }
     if (!("isDone" in task)) { throw new Error("task did not contain isDone"); }
     task.markAsDone();
+    this.save_to_local_storage();
+  }
+
+  save_to_local_storage(): void {
     this.localStrg.setItem(this.tasksKey, JSON.stringify(this.tasks));
   }
 
@@ -166,7 +139,7 @@ class TaskDatabase {
   add_task(task: Task): void {
     if (!this.title_is_valid(task.title)) { throw new Error("title is not unique"); }
     this.tasks.push(task);
-    this.localStrg.setItem(this.tasksKey, JSON.stringify(this.tasks));
+    this.save_to_local_storage();
   }
 
   get_tasks(): Task[] {
@@ -320,6 +293,11 @@ class ViewModel {
     this.pingEventTasksToDisplay();
   }
 
+  public deleteTask(title: string): void {
+    this.taskDataBase.delete_task(title);
+    this.tasksToDisplay;
+  }
+
   public eventListenerTasksToDisplay(callback: Function): void {
     setInterval(() => {
       if (this.eventTasksToDisplay) {
@@ -374,7 +352,7 @@ class View {
   public addTaskButton: HTMLButtonElement;
   public taskListElement: HTMLUListElement;
   public elementsToAddEventListenerTo: {
-    element: HTMLElement, behaviour: "completable" | "completableWithDeadline"}[];
+    element: HTMLElement, behaviour: "completable" | "completableWithDeadline" | "delete"}[];
   public taskTypeFormElement: HTMLFormElement;
   public deadlineDateInputElement: HTMLInputElement;
   public dateErrorMessageElement: HTMLElement;
@@ -418,6 +396,50 @@ class View {
     return taskElement;
   }
 
+  private createDeleteTaskButton(task: Task): HTMLElement {
+    const deleteSvgContainerElement = document.createElement("div");
+    deleteSvgContainerElement.innerHTML = `
+      <svg id="delete-${task.title}" class="delete-button" width="32" height="32" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" xml:space="preserve">
+      <defs>
+      </defs>
+      <g style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: none; fill-rule: nonzero; opacity: 1;" transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)" >
+        <path d="M 13.4 88.492 L 1.508 76.6 c -2.011 -2.011 -2.011 -5.271 0 -7.282 L 69.318 1.508 c 2.011 -2.011 5.271 -2.011 7.282 0 L 88.492 13.4 c 2.011 2.011 2.011 5.271 0 7.282 L 20.682 88.492 C 18.671 90.503 15.411 90.503 13.4 88.492 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(236,0,0); fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round" />
+        <path d="M 69.318 88.492 L 1.508 20.682 c -2.011 -2.011 -2.011 -5.271 0 -7.282 L 13.4 1.508 c 2.011 -2.011 5.271 -2.011 7.282 0 l 67.809 67.809 c 2.011 2.011 2.011 5.271 0 7.282 L 76.6 88.492 C 74.589 90.503 71.329 90.503 69.318 88.492 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(236,0,0); fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round" />
+      </g>
+      </svg>
+    `;
+    const deleteTaskButton = deleteSvgContainerElement.firstChild as HTMLElement;
+    return deleteTaskButton;
+  }
+
+  // private createDeleteTaskButton(task: Task): HTMLElement {
+  //   const deleteTaskButton = document.createElement("svg");
+  //   deleteTaskButton.setAttribute("width", "32");
+  //   deleteTaskButton.setAttribute("height", "32");
+  //   deleteTaskButton.setAttribute("viewBox", "0 0 256 256");
+  //   deleteTaskButton.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  //   deleteTaskButton.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
+  //   deleteTaskButton.setAttribute("version", "1.1");
+  //   deleteTaskButton.setAttribute("xml:space", "preserve");
+
+  //   deleteTaskButton.setAttribute("class", "delete-button");
+  //   deleteTaskButton.setAttribute("id", `delete-${task.title}`);
+
+  //   deleteTaskButton.innerHTML = `
+  //     <g style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: none; fill-rule: nonzero; opacity: 1;" transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)" >
+  //       <path d="M 13.4 88.492 L 1.508 76.6 c -2.011 -2.011 -2.011 -5.271 0 -7.282 L 69.318 1.508 c 2.011 -2.011 5.271 -2.011 7.282 0 L 88.492 13.4 c 2.011 2.011 2.011 5.271 0 7.282 L 20.682 88.492 C 18.671 90.503 15.411 90.503 13.4 88.492 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(236,0,0); fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round" />
+  //       <path d="M 69.318 88.492 L 1.508 20.682 c -2.011 -2.011 -2.011 -5.271 0 -7.282 L 13.4 1.508 c 2.011 -2.011 5.271 -2.011 7.282 0 l 67.809 67.809 c 2.011 2.011 2.011 5.271 0 7.282 L 76.6 88.492 C 74.589 90.503 71.329 90.503 69.318 88.492 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(236,0,0); fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round" />
+  //     </g>
+  //   `;
+  //   return deleteTaskButton;
+  // }
+
+  private createDeleteTaskButtonContainer(task: Task): HTMLElement {
+    const container = document.createElement("div");
+    container.appendChild(this.createDeleteTaskButton(task));
+    return container;
+  }
+
   public createNormalTaskElement(task: Task): HTMLElement {
     // const taskElement = document.createElement("li");
     // taskElement.setAttribute("class", "task");
@@ -438,9 +460,25 @@ class View {
     });
     taskCreationDateElement.textContent = dateString;
 
+    const deleteTaskButtonContainer = document.createElement("div");
+    deleteTaskButtonContainer.setAttribute("id", `delete-${task.title}`);
+    deleteTaskButtonContainer.innerHTML = `
+      <svg class="delete-button" width="32" height="32" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" xml:space="preserve">
+      <defs>
+      </defs>
+      <g style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: none; fill-rule: nonzero; opacity: 1;" transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)" >
+        <path d="M 13.4 88.492 L 1.508 76.6 c -2.011 -2.011 -2.011 -5.271 0 -7.282 L 69.318 1.508 c 2.011 -2.011 5.271 -2.011 7.282 0 L 88.492 13.4 c 2.011 2.011 2.011 5.271 0 7.282 L 20.682 88.492 C 18.671 90.503 15.411 90.503 13.4 88.492 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(236,0,0); fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round" />
+        <path d="M 69.318 88.492 L 1.508 20.682 c -2.011 -2.011 -2.011 -5.271 0 -7.282 L 13.4 1.508 c 2.011 -2.011 5.271 -2.011 7.282 0 l 67.809 67.809 c 2.011 2.011 2.011 5.271 0 7.282 L 76.6 88.492 C 74.589 90.503 71.329 90.503 69.318 88.492 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(236,0,0); fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round" />
+      </g>
+      </svg>
+    `;
+    this.elementsToAddEventListenerTo.push({
+      element: deleteTaskButtonContainer, behaviour: "delete"});
+
     taskElement.appendChild(taskTitleElement);
     taskElement.appendChild(taskDescriptionElement);
     taskElement.appendChild(taskCreationDateElement);
+    taskElement.appendChild(deleteTaskButtonContainer);
 
     return taskElement;
   }
@@ -481,11 +519,27 @@ class View {
     if (task.isDone)
       taskMarkAsDoneButton.setAttribute("disabled", "true");
 
+    const deleteTaskButtonContainer = document.createElement("div");
+    deleteTaskButtonContainer.setAttribute("id", task.title);
+    deleteTaskButtonContainer.innerHTML = `
+      <svg class="delete-button" width="32" height="32" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" xml:space="preserve">
+      <defs>
+      </defs>
+      <g style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: none; fill-rule: nonzero; opacity: 1;" transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)" >
+        <path d="M 13.4 88.492 L 1.508 76.6 c -2.011 -2.011 -2.011 -5.271 0 -7.282 L 69.318 1.508 c 2.011 -2.011 5.271 -2.011 7.282 0 L 88.492 13.4 c 2.011 2.011 2.011 5.271 0 7.282 L 20.682 88.492 C 18.671 90.503 15.411 90.503 13.4 88.492 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(236,0,0); fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round" />
+        <path d="M 69.318 88.492 L 1.508 20.682 c -2.011 -2.011 -2.011 -5.271 0 -7.282 L 13.4 1.508 c 2.011 -2.011 5.271 -2.011 7.282 0 l 67.809 67.809 c 2.011 2.011 2.011 5.271 0 7.282 L 76.6 88.492 C 74.589 90.503 71.329 90.503 69.318 88.492 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(236,0,0); fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round" />
+      </g>
+      </svg>
+    `;
+    this.elementsToAddEventListenerTo.push({
+      element: deleteTaskButtonContainer, behaviour: "delete"});
+
     taskElement.appendChild(taskTitleElement);
     taskElement.appendChild(taskDescriptionElement);
     taskElement.appendChild(taskCreationDateElement);
     taskElement.appendChild(taskIsDoneElement);
     taskElement.appendChild(taskMarkAsDoneButton);
+    taskElement.appendChild(deleteTaskButtonContainer);
 
     return taskElement;
   }
@@ -539,12 +593,28 @@ class View {
     this.elementsToAddEventListenerTo.push({
       element: taskMarkAsDoneButton, behaviour: "completableWithDeadline"});
 
+    const deleteTaskButtonContainer = document.createElement("div");
+    deleteTaskButtonContainer.setAttribute("id", task.title);
+    deleteTaskButtonContainer.innerHTML = `
+      <svg class="delete-button" width="32" height="32" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" xml:space="preserve">
+      <defs>
+      </defs>
+      <g style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: none; fill-rule: nonzero; opacity: 1;" transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)" >
+        <path d="M 13.4 88.492 L 1.508 76.6 c -2.011 -2.011 -2.011 -5.271 0 -7.282 L 69.318 1.508 c 2.011 -2.011 5.271 -2.011 7.282 0 L 88.492 13.4 c 2.011 2.011 2.011 5.271 0 7.282 L 20.682 88.492 C 18.671 90.503 15.411 90.503 13.4 88.492 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(236,0,0); fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round" />
+        <path d="M 69.318 88.492 L 1.508 20.682 c -2.011 -2.011 -2.011 -5.271 0 -7.282 L 13.4 1.508 c 2.011 -2.011 5.271 -2.011 7.282 0 l 67.809 67.809 c 2.011 2.011 2.011 5.271 0 7.282 L 76.6 88.492 C 74.589 90.503 71.329 90.503 69.318 88.492 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(236,0,0); fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round" />
+      </g>
+      </svg>
+    `;
+    this.elementsToAddEventListenerTo.push({
+      element: deleteTaskButtonContainer, behaviour: "delete"});
+
     taskElement.appendChild(taskTitleElement);
     taskElement.appendChild(taskDescriptionElement);
     taskElement.appendChild(taskCreationDateElement);
     taskElement.appendChild(taskIsDoneElement);
     taskElement.appendChild(taskMarkAsDoneButton);
     taskElement.appendChild(taskDeadlineDateElement);
+    taskElement.appendChild(deleteTaskButtonContainer);
 
     return taskElement;
   }
@@ -610,7 +680,7 @@ const bindData = (view: View, viewModel: ViewModel) => {
       callback: (button: HTMLElement) => {
         return () => {
           viewModel.markTaskAsDone(button.id);
-        }
+        };
       }
     },
     completableWithDeadline: {
@@ -619,9 +689,19 @@ const bindData = (view: View, viewModel: ViewModel) => {
         return () => {
           console.log("compwitded callback");
           viewModel.markTaskAsDone(button.id);
-        }
+        };
       }
-    }
+    },
+    delete: {
+      eventType: "click",
+      callback: (button: HTMLElement) => {
+        return () => {
+          const title = button.id.split("-")[1];
+          console.log(title)
+          viewModel.deleteTask(title);
+        };
+      }
+    },
   }
 
   viewModel.eventListenerTasksToDisplay(() => {
@@ -662,7 +742,7 @@ const bindData = (view: View, viewModel: ViewModel) => {
     const subscript = elementObj?.behaviour;
     if (subscript === undefined) { throw new Error("subscript was undefined"); }
     const callbackObj = callbacks[subscript];
-    element.addEventListener("click", callbackObj.callback(element));
+    element.addEventListener(callbackObj.eventType, callbackObj.callback(element));
   })
 
   setInterval(() => {
