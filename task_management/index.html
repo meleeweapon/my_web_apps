@@ -7,14 +7,19 @@
 
   <style>
     body {
-      background: linear-gradient(to top left, #00ffcc 0%, #3366ff 100%);
+      background: linear-gradient(to left, #0a1412 0%, #35373e 100%);
       min-height: 100vh;
       font-family: Arial, Helvetica, sans-serif;
     }
 
     .new-task-and-task-type-container {
+      margin-left: auto;
+      margin-right: auto;
       display: flex;
-      background: linear-gradient(to top left, #3366ff 0%, #00c3ff 100%);
+      background: linear-gradient(to top left, #cbffbd 0%, #79d5b6 100%);
+      /* background: linear-gradient(to top left, #3366ff 0%, #00c3ff 100%); */
+      /* #b2b4bb #cbffbd */
+      /* #79d5b6 */
       border: 1px solid black;
       border-radius: 20px;
       justify-content: space-evenly;
@@ -26,7 +31,7 @@
       display: flex;
       flex-direction: column;
       justify-content: space-evenly;
-      font-size: large;
+      font-size: larger;
     }
 
     .new-task-container {
@@ -73,8 +78,8 @@
       padding: 15px;
       width: max-content;
       margin: 0;
+      font-size: large;
     }
-
 
     .add-task-button {
       width: 60px;
@@ -84,7 +89,10 @@
     }
 
     .task {
-      border: 2px solid black;
+      display: flex;
+      justify-content: space-between;
+
+      border: 2px solid #bfbfbf;
       /* background: linear-gradient(to top left, #009933 0%, #66ff66 100%); */
       background: linear-gradient(to top left, #b8c9d4 0%, #7fd4f1 100%);
 
@@ -93,6 +101,21 @@
       border-top: none;
       border-left: none;
       font-size: large;
+    }
+
+    .delete-button-container {
+      align-self: center;
+      cursor: pointer;
+      /* visibility: hidden; */
+      /* background: blue; */
+      opacity: 0%;
+      transition-duration: 0.5s;
+    }
+
+    .delete-button-container:hover {
+      /* visibility: visible; */
+      /* background: green; */
+      opacity: 100%;
     }
 
     .task-title {
@@ -133,23 +156,28 @@
     .missed {
       background: linear-gradient(to top left, #f06262 0%, #f69494 100%);
     }
+
+    #deadline-date {
+      font-size: large;
+      font-family: Arial, Helvetica, sans-serif;
+    }
   </style>
 </head>
 <body>
   <div class="new-task-and-task-type-container">
     <form action="" class="task-type-choice">
       <div>
-        <input type="radio" id="normal-task-type-radio" name="task-type" value="normal-task" checked="checked">
+        <input class="task-type-radio" type="radio" id="normal-task-type-radio" name="task-type" value="normal-task" checked="checked">
         <label for="normal-task-type-radio">Task</label>
       </div>
 
       <div>
-        <input type="radio" id="completable-task-type-radio" name="task-type" value="completable-task">
+        <input class="task-type-radio" type="radio" id="completable-task-type-radio" name="task-type" value="completable-task">
         <label for="completable-task-type-radio">Completable Task</label>
       </div>
 
       <div>
-        <input type="radio" id="deadlined-task-type-radio" name="task-type" value="deadlined-task">
+        <input class="task-type-radio" type="radio" id="deadlined-task-type-radio" name="task-type" value="deadlined-task">
         <label for="deadlined-task-type-radio">Deadlined Task</label>
       </div>
 

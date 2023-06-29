@@ -327,61 +327,7 @@ class View {
         taskElement.setAttribute("class", classString);
         return taskElement;
     }
-    createDeleteTaskButton(task) {
-        const deleteSvgContainerElement = document.createElement("div");
-        deleteSvgContainerElement.innerHTML = `
-      <svg id="delete-${task.title}" class="delete-button" width="32" height="32" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" xml:space="preserve">
-      <defs>
-      </defs>
-      <g style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: none; fill-rule: nonzero; opacity: 1;" transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)" >
-        <path d="M 13.4 88.492 L 1.508 76.6 c -2.011 -2.011 -2.011 -5.271 0 -7.282 L 69.318 1.508 c 2.011 -2.011 5.271 -2.011 7.282 0 L 88.492 13.4 c 2.011 2.011 2.011 5.271 0 7.282 L 20.682 88.492 C 18.671 90.503 15.411 90.503 13.4 88.492 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(236,0,0); fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round" />
-        <path d="M 69.318 88.492 L 1.508 20.682 c -2.011 -2.011 -2.011 -5.271 0 -7.282 L 13.4 1.508 c 2.011 -2.011 5.271 -2.011 7.282 0 l 67.809 67.809 c 2.011 2.011 2.011 5.271 0 7.282 L 76.6 88.492 C 74.589 90.503 71.329 90.503 69.318 88.492 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(236,0,0); fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round" />
-      </g>
-      </svg>
-    `;
-        const deleteTaskButton = deleteSvgContainerElement.firstChild;
-        return deleteTaskButton;
-    }
-    // private createDeleteTaskButton(task: Task): HTMLElement {
-    //   const deleteTaskButton = document.createElement("svg");
-    //   deleteTaskButton.setAttribute("width", "32");
-    //   deleteTaskButton.setAttribute("height", "32");
-    //   deleteTaskButton.setAttribute("viewBox", "0 0 256 256");
-    //   deleteTaskButton.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-    //   deleteTaskButton.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
-    //   deleteTaskButton.setAttribute("version", "1.1");
-    //   deleteTaskButton.setAttribute("xml:space", "preserve");
-    //   deleteTaskButton.setAttribute("class", "delete-button");
-    //   deleteTaskButton.setAttribute("id", `delete-${task.title}`);
-    //   deleteTaskButton.innerHTML = `
-    //     <g style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: none; fill-rule: nonzero; opacity: 1;" transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)" >
-    //       <path d="M 13.4 88.492 L 1.508 76.6 c -2.011 -2.011 -2.011 -5.271 0 -7.282 L 69.318 1.508 c 2.011 -2.011 5.271 -2.011 7.282 0 L 88.492 13.4 c 2.011 2.011 2.011 5.271 0 7.282 L 20.682 88.492 C 18.671 90.503 15.411 90.503 13.4 88.492 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(236,0,0); fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round" />
-    //       <path d="M 69.318 88.492 L 1.508 20.682 c -2.011 -2.011 -2.011 -5.271 0 -7.282 L 13.4 1.508 c 2.011 -2.011 5.271 -2.011 7.282 0 l 67.809 67.809 c 2.011 2.011 2.011 5.271 0 7.282 L 76.6 88.492 C 74.589 90.503 71.329 90.503 69.318 88.492 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(236,0,0); fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round" />
-    //     </g>
-    //   `;
-    //   return deleteTaskButton;
-    // }
     createDeleteTaskButtonContainer(task) {
-        const container = document.createElement("div");
-        container.appendChild(this.createDeleteTaskButton(task));
-        return container;
-    }
-    createNormalTaskElement(task) {
-        // const taskElement = document.createElement("li");
-        // taskElement.setAttribute("class", "task");
-        const taskElement = this.createTaskRootElement(task);
-        const taskTitleElement = document.createElement("div");
-        taskTitleElement.setAttribute("class", "task-title");
-        taskTitleElement.textContent = task.title;
-        const taskDescriptionElement = document.createElement("div");
-        taskDescriptionElement.setAttribute("class", "task-description");
-        taskDescriptionElement.textContent = task.description;
-        const taskCreationDateElement = document.createElement("div");
-        taskCreationDateElement.setAttribute("class", "task-creation-date");
-        const dateString = task.creationTime.toLocaleDateString("en-US", {
-            hour: "numeric", minute: "numeric", day: "numeric", weekday: "long", month: "short"
-        });
-        taskCreationDateElement.textContent = dateString;
         const deleteTaskButtonContainer = document.createElement("div");
         deleteTaskButtonContainer.setAttribute("id", `delete-${task.title}`);
         deleteTaskButtonContainer.innerHTML = `
@@ -394,31 +340,55 @@ class View {
       </g>
       </svg>
     `;
-        this.elementsToAddEventListenerTo.push({
-            element: deleteTaskButtonContainer, behaviour: "delete"
-        });
-        taskElement.appendChild(taskTitleElement);
-        taskElement.appendChild(taskDescriptionElement);
-        taskElement.appendChild(taskCreationDateElement);
-        taskElement.appendChild(deleteTaskButtonContainer);
-        return taskElement;
+        return deleteTaskButtonContainer;
     }
-    createCompletableTaskElement(task) {
-        // const taskElement = document.createElement("li");
-        // taskElement.setAttribute("class", "task");
-        const taskElement = this.createTaskRootElement(task);
+    createTitleElement(task) {
         const taskTitleElement = document.createElement("div");
         taskTitleElement.setAttribute("class", "task-title");
         taskTitleElement.textContent = task.title;
+        return taskTitleElement;
+    }
+    createDescriptionElement(task) {
         const taskDescriptionElement = document.createElement("div");
         taskDescriptionElement.setAttribute("class", "task-description");
         taskDescriptionElement.textContent = task.description;
+        return taskDescriptionElement;
+    }
+    createCreationDateElement(task) {
         const taskCreationDateElement = document.createElement("div");
         taskCreationDateElement.setAttribute("class", "task-creation-date");
         const dateString = task.creationTime.toLocaleDateString("en-US", {
             hour: "numeric", minute: "numeric", day: "numeric", weekday: "long", month: "short"
         });
         taskCreationDateElement.textContent = dateString;
+        return taskCreationDateElement;
+    }
+    appendChildren(parent, elements) {
+        for (const element of elements) {
+            parent.appendChild(element);
+        }
+    }
+    createNormalTaskElement(task) {
+        const taskElement = this.createTaskRootElement(task);
+        const taskTitleElement = this.createTitleElement(task);
+        const taskDescriptionElement = this.createDescriptionElement(task);
+        const taskCreationDateElement = this.createCreationDateElement(task);
+        const deleteTaskButtonContainer = this.createDeleteTaskButtonContainer(task);
+        this.elementsToAddEventListenerTo.push({
+            element: deleteTaskButtonContainer, behaviour: "delete"
+        });
+        const taskDataContainer = document.createElement("div");
+        taskDataContainer.setAttribute("class", "task-data-container");
+        const deleteButtonContainer = document.createElement("div");
+        deleteButtonContainer.setAttribute("class", "delete-button-container");
+        const dataElements = [taskTitleElement, taskDescriptionElement, taskCreationDateElement];
+        this.appendChildren(taskDataContainer, dataElements);
+        deleteButtonContainer.appendChild(deleteTaskButtonContainer);
+        taskElement.appendChild(taskDataContainer);
+        taskElement.appendChild(deleteButtonContainer);
+        return taskElement;
+    }
+    createTaskIsDoneElement(task) {
         const taskIsDoneElement = document.createElement("div");
         taskIsDoneElement.setAttribute("class", "task-is-done");
         if (task.isDone) {
@@ -427,58 +397,56 @@ class View {
         else {
             taskIsDoneElement.textContent = "Ongoing";
         }
+        return taskIsDoneElement;
+    }
+    createTaskMarkAsDoneButton(task) {
         const taskMarkAsDoneButton = document.createElement("button");
         taskMarkAsDoneButton.setAttribute("class", "task-mark-as-done");
         taskMarkAsDoneButton.setAttribute("id", task.title);
         taskMarkAsDoneButton.textContent = "Mark As Done";
-        this.elementsToAddEventListenerTo.push({ element: taskMarkAsDoneButton, behaviour: "completable" });
         if (task.isDone)
             taskMarkAsDoneButton.setAttribute("disabled", "true");
-        const deleteTaskButtonContainer = document.createElement("div");
-        deleteTaskButtonContainer.setAttribute("id", task.title);
-        deleteTaskButtonContainer.innerHTML = `
-      <svg class="delete-button" width="32" height="32" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" xml:space="preserve">
-      <defs>
-      </defs>
-      <g style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: none; fill-rule: nonzero; opacity: 1;" transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)" >
-        <path d="M 13.4 88.492 L 1.508 76.6 c -2.011 -2.011 -2.011 -5.271 0 -7.282 L 69.318 1.508 c 2.011 -2.011 5.271 -2.011 7.282 0 L 88.492 13.4 c 2.011 2.011 2.011 5.271 0 7.282 L 20.682 88.492 C 18.671 90.503 15.411 90.503 13.4 88.492 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(236,0,0); fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round" />
-        <path d="M 69.318 88.492 L 1.508 20.682 c -2.011 -2.011 -2.011 -5.271 0 -7.282 L 13.4 1.508 c 2.011 -2.011 5.271 -2.011 7.282 0 l 67.809 67.809 c 2.011 2.011 2.011 5.271 0 7.282 L 76.6 88.492 C 74.589 90.503 71.329 90.503 69.318 88.492 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(236,0,0); fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round" />
-      </g>
-      </svg>
-    `;
+        return taskMarkAsDoneButton;
+    }
+    createCompletableTaskElement(task) {
+        const taskElement = this.createTaskRootElement(task);
+        const taskTitleElement = this.createTitleElement(task);
+        const taskDescriptionElement = this.createDescriptionElement(task);
+        const taskCreationDateElement = this.createCreationDateElement(task);
+        const taskIsDoneElement = this.createTaskIsDoneElement(task);
+        const taskMarkAsDoneButton = this.createTaskMarkAsDoneButton(task);
+        this.elementsToAddEventListenerTo.push({ element: taskMarkAsDoneButton, behaviour: "completable" });
+        const deleteTaskButtonContainer = this.createDeleteTaskButtonContainer(task);
         this.elementsToAddEventListenerTo.push({
             element: deleteTaskButtonContainer, behaviour: "delete"
         });
-        taskElement.appendChild(taskTitleElement);
-        taskElement.appendChild(taskDescriptionElement);
-        taskElement.appendChild(taskCreationDateElement);
-        taskElement.appendChild(taskIsDoneElement);
-        taskElement.appendChild(taskMarkAsDoneButton);
-        taskElement.appendChild(deleteTaskButtonContainer);
+        const taskDataContainer = document.createElement("div");
+        taskDataContainer.setAttribute("class", "task-data-container");
+        const deleteButtonContainer = document.createElement("div");
+        deleteButtonContainer.setAttribute("class", "delete-button-container");
+        const dataElements = [
+            taskTitleElement,
+            taskDescriptionElement,
+            taskCreationDateElement,
+            taskIsDoneElement,
+            taskMarkAsDoneButton,
+        ];
+        this.appendChildren(taskDataContainer, dataElements);
+        deleteButtonContainer.appendChild(deleteTaskButtonContainer);
+        taskElement.appendChild(taskDataContainer);
+        taskElement.appendChild(deleteButtonContainer);
         return taskElement;
     }
-    createCompletableWithDeadlineTaskElement(task) {
-        // const taskElement = document.createElement("li");
-        // taskElement.setAttribute("class", "task");
-        const taskElement = this.createTaskRootElement(task);
-        const taskTitleElement = document.createElement("div");
-        taskTitleElement.setAttribute("class", "task-title");
-        taskTitleElement.textContent = task.title;
-        const taskDescriptionElement = document.createElement("div");
-        taskDescriptionElement.setAttribute("class", "task-description");
-        taskDescriptionElement.textContent = task.description;
-        const taskCreationDateElement = document.createElement("div");
-        taskCreationDateElement.setAttribute("class", "task-creation-date");
-        const dateString = task.creationTime.toLocaleDateString("en-US", {
-            hour: "numeric", minute: "numeric", day: "numeric", weekday: "long", month: "short"
-        });
-        taskCreationDateElement.textContent = dateString;
+    createTaskDeadlineDateElement(task) {
         const taskDeadlineDateElement = document.createElement("div");
         taskDeadlineDateElement.setAttribute("class", "task-deadline-date");
         const deadlineDateString = task.deadline.toLocaleDateString("en-US", {
             hour: "numeric", minute: "numeric", day: "numeric", weekday: "long", month: "short"
         });
-        taskDeadlineDateElement.textContent = deadlineDateString;
+        taskDeadlineDateElement.textContent = `Deadline: ${deadlineDateString}`;
+        return taskDeadlineDateElement;
+    }
+    createDeadlinedTaskIsDoneElement(task) {
         const taskIsDoneElement = document.createElement("div");
         taskIsDoneElement.setAttribute("class", "task-is-done");
         if (task.isDone) {
@@ -492,6 +460,9 @@ class View {
                 taskIsDoneElement.textContent = "Ongoing";
             }
         }
+        return taskIsDoneElement;
+    }
+    createDeadlinedTaskMarkAsDoneElement(task) {
         const taskMarkAsDoneButton = document.createElement("button");
         taskMarkAsDoneButton.setAttribute("class", "task-mark-as-done");
         taskMarkAsDoneButton.setAttribute("id", task.title);
@@ -499,31 +470,39 @@ class View {
         if (!task.isOngoing() || task.isDone) {
             taskMarkAsDoneButton.setAttribute("disabled", "true");
         }
+        return taskMarkAsDoneButton;
+    }
+    createCompletableWithDeadlineTaskElement(task) {
+        const taskElement = this.createTaskRootElement(task);
+        const taskTitleElement = this.createTitleElement(task);
+        const taskDescriptionElement = this.createDescriptionElement(task);
+        const taskCreationDateElement = this.createCreationDateElement(task);
+        const taskDeadlineDateElement = this.createTaskDeadlineDateElement(task);
+        const taskIsDoneElement = this.createDeadlinedTaskIsDoneElement(task);
+        const taskMarkAsDoneButton = this.createDeadlinedTaskMarkAsDoneElement(task);
         this.elementsToAddEventListenerTo.push({
             element: taskMarkAsDoneButton, behaviour: "completableWithDeadline"
         });
-        const deleteTaskButtonContainer = document.createElement("div");
-        deleteTaskButtonContainer.setAttribute("id", task.title);
-        deleteTaskButtonContainer.innerHTML = `
-      <svg class="delete-button" width="32" height="32" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" xml:space="preserve">
-      <defs>
-      </defs>
-      <g style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: none; fill-rule: nonzero; opacity: 1;" transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)" >
-        <path d="M 13.4 88.492 L 1.508 76.6 c -2.011 -2.011 -2.011 -5.271 0 -7.282 L 69.318 1.508 c 2.011 -2.011 5.271 -2.011 7.282 0 L 88.492 13.4 c 2.011 2.011 2.011 5.271 0 7.282 L 20.682 88.492 C 18.671 90.503 15.411 90.503 13.4 88.492 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(236,0,0); fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round" />
-        <path d="M 69.318 88.492 L 1.508 20.682 c -2.011 -2.011 -2.011 -5.271 0 -7.282 L 13.4 1.508 c 2.011 -2.011 5.271 -2.011 7.282 0 l 67.809 67.809 c 2.011 2.011 2.011 5.271 0 7.282 L 76.6 88.492 C 74.589 90.503 71.329 90.503 69.318 88.492 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(236,0,0); fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round" />
-      </g>
-      </svg>
-    `;
+        const deleteTaskButtonContainer = this.createDeleteTaskButtonContainer(task);
         this.elementsToAddEventListenerTo.push({
             element: deleteTaskButtonContainer, behaviour: "delete"
         });
-        taskElement.appendChild(taskTitleElement);
-        taskElement.appendChild(taskDescriptionElement);
-        taskElement.appendChild(taskCreationDateElement);
-        taskElement.appendChild(taskIsDoneElement);
-        taskElement.appendChild(taskMarkAsDoneButton);
-        taskElement.appendChild(taskDeadlineDateElement);
-        taskElement.appendChild(deleteTaskButtonContainer);
+        const taskDataContainer = document.createElement("div");
+        taskDataContainer.setAttribute("class", "task-data-container");
+        const deleteButtonContainer = document.createElement("div");
+        deleteButtonContainer.setAttribute("class", "delete-button-container");
+        const dataElements = [
+            taskTitleElement,
+            taskDescriptionElement,
+            taskCreationDateElement,
+            taskIsDoneElement,
+            taskDeadlineDateElement,
+            taskMarkAsDoneButton,
+        ];
+        this.appendChildren(taskDataContainer, dataElements);
+        deleteButtonContainer.appendChild(deleteTaskButtonContainer);
+        taskElement.appendChild(taskDataContainer);
+        taskElement.appendChild(deleteButtonContainer);
         return taskElement;
     }
     createTaskElement(task) {
@@ -603,6 +582,9 @@ const bindData = (view, viewModel) => {
             callback: (button) => {
                 return () => {
                     const title = button.id.split("-")[1];
+                    if (title === undefined) {
+                        throw new Error("title was undefined");
+                    }
                     console.log(title);
                     viewModel.deleteTask(title);
                 };
@@ -655,9 +637,11 @@ const bindData = (view, viewModel) => {
         const callbackObj = callbacks[subscript];
         element.addEventListener(callbackObj.eventType, callbackObj.callback(element));
     });
-    setInterval(() => {
-        view.renderTasks(viewModel.tasksToDisplay);
-    }, 1000);
+    // this was for deadlined tasks missing in real time, it could be implemented
+    // better with event listners, i will not bother implementing for now
+    // setInterval(() => {
+    //   view.renderTasks(viewModel.tasksToDisplay);
+    // }, 1000)
     view.titleInputElement.addEventListener("input", (event) => {
         viewModel.title = view.titleInputElement.value;
     });
