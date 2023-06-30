@@ -129,7 +129,20 @@ class ViewModel {
         this.eventTasksToDisplay = false;
         this.eventTaskType = false;
         this.eventSaveable = false;
+        this.eventDeleteAllState = false;
         this.fetchTasksToDisplay();
+    }
+    get deleteAllState() {
+        return this._deleteAllState;
+    }
+    set deleteAllState(state) {
+        if (this.taskDataBase.get_tasks().length <= 0
+            && !this._deleteAllState
+            && state) {
+            return;
+        }
+        this._deleteAllState = state;
+        this.pingEventDeleteAllState();
     }
     get saveable() {
         return this._saveable;
@@ -244,6 +257,26 @@ class ViewModel {
         this.taskDataBase.delete_task(title);
         this.tasksToDisplay;
     }
+    deleteAllTasks() {
+        // const tasks = this.taskDataBase.get_tasks();
+        if (!this.deleteAllState) {
+            return;
+        }
+        let task;
+        while (task = this.taskDataBase.get_tasks()[0]) {
+            this.taskDataBase.delete_task(task.title);
+        }
+        this.tasksToDisplay;
+        this.deleteAllState = false;
+    }
+    eventListenerDeleteAllState(callback) {
+        setInterval(() => {
+            if (this.eventDeleteAllState) {
+                callback();
+                this.eventDeleteAllState = !this.eventDeleteAllState;
+            }
+        }, 50);
+    }
     eventListenerTasksToDisplay(callback) {
         setInterval(() => {
             if (this.eventTasksToDisplay) {
@@ -267,6 +300,9 @@ class ViewModel {
                 this.eventSaveable = !this.eventSaveable;
             }
         }, 50);
+    }
+    pingEventDeleteAllState() {
+        this.eventDeleteAllState = true;
     }
     pingEventTasksToDisplay() {
         this.eventTasksToDisplay = true;
@@ -299,6 +335,10 @@ class View {
         this.taskTypeFormElement = document.querySelector(".task-type-choice");
         this.deadlineDateInputElement = document.querySelector("#deadline-date");
         this.dateErrorMessageElement = document.querySelector(".date-error-message");
+        this.deleteAllButtonContainer = document.querySelector(".delete-all-button-container");
+        this.deleteOverlay = document.querySelector(".delete-overlay");
+        this.acceptDeleteButton = document.querySelector(".yes-button");
+        this.rejectDeleteButton = document.querySelector(".no-button");
         this.elementsToAddEventListenerTo = [];
         this.eventElementsToAddEventListenerTo = false;
     }
@@ -526,6 +566,12 @@ class View {
             this.taskListElement.appendChild(taskElement);
         }
     }
+    exposeDeleteOverlay() {
+        view.deleteOverlay.setAttribute("class", "delete-overlay visible-overlay");
+    }
+    hideDeleteOverlay() {
+        view.deleteOverlay.setAttribute("class", "delete-overlay");
+    }
     disableDeadlineDateInputElement() {
         view.deadlineDateInputElement.setAttribute("disabled", "true");
     }
@@ -650,6 +696,27 @@ const bindData = (view, viewModel) => {
     });
     view.addTaskButton.addEventListener("click", (event) => {
         viewModel.saveTask();
+    });
+    view.deleteAllButtonContainer.addEventListener("click", () => {
+        // viewModel.deleteAllTasks();
+        viewModel.deleteAllState = true;
+    });
+    view.acceptDeleteButton.addEventListener("click", () => {
+        if (!viewModel.deleteAllState) {
+            return;
+        }
+        viewModel.deleteAllTasks();
+    });
+    view.rejectDeleteButton.addEventListener("click", () => {
+        viewModel.deleteAllState = false;
+    });
+    viewModel.eventListenerDeleteAllState(() => {
+        if (viewModel.deleteAllState) {
+            view.exposeDeleteOverlay();
+        }
+        else {
+            view.hideDeleteOverlay();
+        }
     });
     view.taskTypeFormElement.addEventListener("input", event => {
         var _a;

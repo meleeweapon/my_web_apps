@@ -173,10 +173,12 @@ class ViewModel {
   private _taskType: TaskType;
   private _date: Date | null;
   private _saveable: boolean;
+  private _deleteAllState: boolean;
   private taskDataBase: TaskDatabase;
   private eventTasksToDisplay: boolean;
   private eventTaskType: boolean;
   private eventSaveable: boolean;
+  private eventDeleteAllState: boolean;
 
   constructor(taskDataBase: TaskDatabase) {
     this.taskDataBase = taskDataBase;
@@ -188,9 +190,24 @@ class ViewModel {
     this.eventTasksToDisplay = false;
     this.eventTaskType = false;
     this.eventSaveable = false;
+    this.eventDeleteAllState = false;
     this.fetchTasksToDisplay();
   }
 
+  public get deleteAllState(): boolean {
+    return this._deleteAllState;
+  }
+  public set deleteAllState(state: boolean) {
+    if (
+      this.taskDataBase.get_tasks().length <= 0 
+      && !this._deleteAllState
+      && state
+    ) {
+      return;
+    }
+    this._deleteAllState = state;
+    this.pingEventDeleteAllState();
+  }
   public get saveable(): boolean {
     return this._saveable;
   }
@@ -298,6 +315,25 @@ class ViewModel {
     this.tasksToDisplay;
   }
 
+  public deleteAllTasks(): void {
+    // const tasks = this.taskDataBase.get_tasks();
+    if (!this.deleteAllState) { return; }
+    let task;
+    while (task = this.taskDataBase.get_tasks()[0]) {
+      this.taskDataBase.delete_task(task.title);
+    }
+    this.tasksToDisplay;
+    this.deleteAllState = false;
+  }
+
+  public eventListenerDeleteAllState(callback: Function): void {
+    setInterval(() => {
+      if (this.eventDeleteAllState) {
+        callback();
+        this.eventDeleteAllState = !this.eventDeleteAllState;
+      }
+    }, 50);
+  }
   public eventListenerTasksToDisplay(callback: Function): void {
     setInterval(() => {
       if (this.eventTasksToDisplay) {
@@ -323,6 +359,9 @@ class ViewModel {
     }, 50);
   }
 
+  private pingEventDeleteAllState(): void {
+    this.eventDeleteAllState = true;
+  }
   private pingEventTasksToDisplay(): void {
     this.eventTasksToDisplay = true;
   }
@@ -357,6 +396,10 @@ class View {
   public deadlineDateInputElement: HTMLInputElement;
   public dateErrorMessageElement: HTMLElement;
   public eventElementsToAddEventListenerTo: boolean;
+  public deleteAllButtonContainer: HTMLElement;
+  public deleteOverlay: HTMLElement;
+  public acceptDeleteButton: HTMLButtonElement;
+  public rejectDeleteButton: HTMLButtonElement;
 
   constructor() {
     this.titleInputElement = document.querySelector("#title") as HTMLInputElement;
@@ -366,6 +409,10 @@ class View {
     this.taskTypeFormElement = document.querySelector(".task-type-choice") as HTMLFormElement;
     this.deadlineDateInputElement = document.querySelector("#deadline-date") as HTMLInputElement;
     this.dateErrorMessageElement = document.querySelector(".date-error-message") as HTMLElement;
+    this.deleteAllButtonContainer = document.querySelector(".delete-all-button-container") as HTMLElement;
+    this.deleteOverlay = document.querySelector(".delete-overlay") as HTMLElement;
+    this.acceptDeleteButton = document.querySelector(".yes-button") as HTMLButtonElement;
+    this.rejectDeleteButton = document.querySelector(".no-button") as HTMLButtonElement;
     this.elementsToAddEventListenerTo = [];
     this.eventElementsToAddEventListenerTo = false;
   }
@@ -617,13 +664,18 @@ class View {
     }
   }
 
+  public exposeDeleteOverlay(): void {
+    view.deleteOverlay.setAttribute("class", "delete-overlay visible-overlay");
+  }
+  public hideDeleteOverlay(): void {
+    view.deleteOverlay.setAttribute("class", "delete-overlay");
+  }
   public disableDeadlineDateInputElement(): void {
     view.deadlineDateInputElement.setAttribute("disabled", "true");
   }
   public enableDeadlineDateInputElement(): void {
     view.deadlineDateInputElement.removeAttribute("disabled");
   }
-
   public hideDateErrorMessageElement(message?: string): void {
     if (message !== undefined) { this.setDateErrorMessage(message); }
     this.dateErrorMessageElement.setAttribute("class", "date-error-message hidden")
@@ -737,6 +789,28 @@ const bindData = (view: View, viewModel: ViewModel) => {
 
   view.addTaskButton.addEventListener("click", (event) => {
     viewModel.saveTask();
+  })
+
+  view.deleteAllButtonContainer.addEventListener("click", () => {
+    // viewModel.deleteAllTasks();
+    viewModel.deleteAllState = true;
+  })
+
+  view.acceptDeleteButton.addEventListener("click", () => {
+    if (!viewModel.deleteAllState) { return; }
+    viewModel.deleteAllTasks();
+  })
+
+  view.rejectDeleteButton.addEventListener("click", () => {
+    viewModel.deleteAllState = false;
+  })
+
+  viewModel.eventListenerDeleteAllState(() => {
+    if (viewModel.deleteAllState) {
+      view.exposeDeleteOverlay();
+    } else {
+      view.hideDeleteOverlay();
+    }
   })
 
   view.taskTypeFormElement.addEventListener("input", event => {
