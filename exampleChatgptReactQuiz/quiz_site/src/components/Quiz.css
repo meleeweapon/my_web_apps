@@ -40,3 +40,16 @@
   border-radius: 4px;
   cursor: pointer;
 }
+
+.quiz-result {
+  margin-top: 20px;
+  font-weight: bold;
+}
+
+.quiz-result-correct {
+  color: green;
+}
+
+.quiz-result-incorrect {
+  color: red;
+}
