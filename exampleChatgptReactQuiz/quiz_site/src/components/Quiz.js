@@ -68,6 +68,11 @@ const Quiz = () => {
     setShowResults(true);
   };
 
+  const handleRestart = () => {
+    setShowResults(false);
+    setAnswers([]);
+  }
+
   return (
     <div className="quiz-container">
       <h1 className="quiz-title">Welcome to the Quiz Site!</h1>
@@ -91,10 +96,7 @@ const Quiz = () => {
           </div>
         </div>
       ))}
-      <button className="quiz-submit-button" onClick={handleSubmit}>
-        Submit
-      </button>
-      {showResults && (
+      {showResults ? (
         <div className="quiz-result">
           {quizData.map((quiz, index) => (
             <p
@@ -106,7 +108,14 @@ const Quiz = () => {
               {answers[index] === quiz.answer ? 'Correct' : 'Incorrect'}: {quiz.answer}
             </p>
           ))}
+          <button className='quiz-restart-button' onClick={handleRestart}>
+            Restart
+          </button>
         </div>
+      ) : (
+        <button className="quiz-submit-button" onClick={handleSubmit}>
+          Submit
+        </button>
       )}
     </div>
   );
