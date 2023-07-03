@@ -1,16 +1,16 @@
 // model
-const idLength = 6;
+const ID_LENGTH = 6;
 class Id {
   value: string;
   constructor(value?: string) {
     if (value) {
-      if (value.length !== idLength) {
-        throw new Error("id len was not 6");
+      if (value.length !== ID_LENGTH) {
+        throw new Error("ID length must be " + ID_LENGTH.toString());
       }
       this.value = value;
     } else {
       const randomValue = Math.random();
-      this.value = randomValue.toString().split(".")[1].slice(0, idLength);
+      this.value = randomValue.toString().split(".")[1].slice(0, ID_LENGTH);
     }
   }
 }
@@ -19,12 +19,12 @@ type Choice = string;
 
 class Choices {
   constructor(
-    private choices: Choice[],
+    private readonly choices: Choice[],
   ) {
 
   }
   isValidChoice(choice: Choice) {
-    return choice in this.choices;
+    return this.choices.includes(choice);
   }
   getAll(): string[] {
     return [...this.choices];
@@ -43,9 +43,9 @@ class Player {
   public answers: Answer[];
   constructor(
     public name: string,
-    answers?: Answer[],
+    answers: Answer[] = [],
   ) {
-    this.answers = !answers ? [] : answers;
+    this.answers = answers;
   }
 }
 
@@ -58,7 +58,7 @@ class Question {
     correctAnswer: string,
   ) {
     if (!choices.isValidChoice(correctAnswer)) {
-      throw new Error("invalid answer");
+      throw new Error("Invalid answer");
     }
     this.correctAnswer = correctAnswer;
   }
@@ -85,7 +85,7 @@ class PlayerResult {
   constructor(
     public player: Player,
     public score: number,
-    public answersCorrect: AnswerResult[],
+    public answersResult: AnswerResult[],
   ) {
   }
 }
@@ -97,29 +97,17 @@ class QuizGame {
   ) {}
   public scores(): PlayerResult[] {
     const playerResults = this.players.map(player => {
-      const score = 0;
-      // const answersCorrect = player.answers
-      //   .map(answer => {
-      //     if (answer. in this.questions)
-      //     const result = 
-      //     new AnswerResult(answer, );
-      //   })
       const answerResults = this.questions.map(question => {
-        let result: Result;
-        if (question.id.value in player.answers.map(a => a.questionId.value)) {
-          const answer = player.answers.filter(a => a.questionId === question.id)[0];
-          if (
-            question.correctAnswer 
-            === 
-            answer.choice
-          ) {
-            result = "correct";
-          } else {
-            result = "wrong";
-          }
-        } else { result = "empty" }
-        new AnswerResult(new Answer(answer), result);
+        const answer = player.answers.find(a => a.questionId.value === question.id.value);
+        const result: Result = answer
+          ? question.correctAnswer.toLowerCase() === answer.choice.toLowerCase()
+            ? "correct"
+            : "wrong"
+          : "empty";
+        if (!answer) { throw new Error("answer was undefined"); }
+        return new AnswerResult(answer, result);
       });
+      const score = answerResults.filter(result => result.result === "correct").length;
       const playerResult = new PlayerResult(player, score, answerResults);
       return playerResult;
     });
