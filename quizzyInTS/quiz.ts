@@ -1,118 +1,107 @@
-// model
-const ID_LENGTH = 6;
-class Id {
-  value: string;
-  constructor(value?: string) {
-    if (value) {
-      if (value.length !== ID_LENGTH) {
-        throw new Error("ID length must be " + ID_LENGTH.toString());
-      }
-      this.value = value;
-    } else {
-      const randomValue = Math.random();
-      this.value = randomValue.toString().split(".")[1].slice(0, ID_LENGTH);
-    }
-  }
+interface Question {
+  questionText: string,
+  choices: string[],
+  correctAnswer: string,
+  playerAnswer: string | null,
 }
-
-type Choice = string;
-
-class Choices {
-  constructor(
-    private readonly choices: Choice[],
-  ) {
-
-  }
-  isValidChoice(choice: Choice) {
-    return this.choices.includes(choice);
-  }
-  getAll(): string[] {
-    return [...this.choices];
-  }
-}
-
-class Answer {
-  constructor(
-    public questionId: Id,
-    public choice: Choice,
-  ) {
-  }
-}
-
-class Player {
-  public answers: Answer[];
-  constructor(
-    public name: string,
-    answers: Answer[] = [],
-  ) {
-    this.answers = answers;
-  }
-}
-
-class Question {
-  public correctAnswer: string;
-  constructor(
-    public id: Id,
-    public question: string,
-    public choices: Choices,
-    correctAnswer: string,
-  ) {
-    if (!choices.isValidChoice(correctAnswer)) {
-      throw new Error("Invalid answer");
-    }
-    this.correctAnswer = correctAnswer;
-  }
-}
-
-// class QuizRound {
-//   constructor(
-//     public question: Question,
-//   ) {
-//   }
-// }
 
 type Result = "correct" | "wrong" | "empty";
 
-class AnswerResult {
-  constructor(
-    public answer: Answer,
-    public result: Result,
-  ) {
-  }
+interface QuestionResult {
+  question: Question,
+  result: Result,
 }
 
-class PlayerResult {
-  constructor(
-    public player: Player,
-    public score: number,
-    public answersResult: AnswerResult[],
-  ) {
-  }
-}
+type PlayingState = "not started" | "playing" | "finished";
+// enum PlayingState {
+//   "not started",
+//   "playing",
+//   "finished",
+// }
 
 class QuizGame {
-  constructor(
-    public players: Player[],
-    public questions: Question[],
-  ) {}
-  public scores(): PlayerResult[] {
-    const playerResults = this.players.map(player => {
-      const answerResults = this.questions.map(question => {
-        const answer = player.answers.find(a => a.questionId.value === question.id.value);
-        const result: Result = answer
-          ? question.correctAnswer.toLowerCase() === answer.choice.toLowerCase()
-            ? "correct"
-            : "wrong"
-          : "empty";
-        if (!answer) { throw new Error("answer was undefined"); }
-        return new AnswerResult(answer, result);
-      });
-      const score = answerResults.filter(result => result.result === "correct").length;
-      const playerResult = new PlayerResult(player, score, answerResults);
-      return playerResult;
-    });
-    return playerResults;
+  private questions: Question[];
+  private currentQuestion: Question | null;
+  private score: number;
+  private playingState: PlayingState;
+
+  constructor(questions: Question[]) {
+    if (!questions.length) { throw new Error("no questions were provided"); }
+    this.questions = questions;
+    this.currentQuestion = this.questions[0];
+    this.score = 0;
+    this.playingState = "not started";
+  }
+
+  private setDefaultState(): void {
+    this.currentQuestion = this.questions[0];
+    this.score = 0;
+    this.playingState = "not started";
+  }
+
+  public startGame(): void {
+    switch (this.playingState) {
+      case "not started":
+        this.playingState = "playing";
+        break;
+      default:
+        break;
+    }
+  }
+
+  public endGame(): void {
+    switch (this.playingState) {
+      case "playing":
+        this.playingState = "finished";
+        break;
+      default:
+        break;
+    }
+  }
+
+  private nextQuestion(): Question | null {
+    if (!this.currentQuestion) { throw new Error("No more questions left"); }
+    const index = this.questions.indexOf(this.currentQuestion);
+    return index + 1 >= this.questions.length ? null : this.questions[index + 1];
+  }
+
+  public submitAnswer(answer: string): void {
+    if (!this.currentQuestion) { throw new Error("Can't submit null question"); }
+    if (!this.currentQuestion.choices.includes(answer)) { throw new Error("Invalid answer"); }
+    this.currentQuestion.playerAnswer = answer;
+    if (this.currentQuestion.correctAnswer === this.currentQuestion.playerAnswer) {
+      this.score += 1;
+    }
+  }
+
+  public advanceQuestion(): void {
+    this.currentQuestion = this.nextQuestion();
+    if (!this.currentQuestion) {
+      this.endGame();
+    }
   }
 }
 
-const player = new Player("awooga");
+const questions: Question[] = [
+  {
+    questionText: "1 + 1 = ?",
+    choices: ["5", "ten", "abraham lincoln", "2"],
+    correctAnswer: "2",
+    playerAnswer: null
+  },
+  {
+    questionText: "you are ___",
+    choices: ["beautiful", "ugly", "bad", "wrong"],
+    correctAnswer: "beautiful",
+    playerAnswer: null
+  },
+  {
+    questionText: "not (true or false)",
+    choices: ["true", "false"],
+    correctAnswer: "false",
+    playerAnswer: null
+  },
+]
+
+const game = new QuizGame(questions);
+game.startGame();
