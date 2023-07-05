@@ -1,3 +1,4 @@
+// model
 interface Question {
   questionText: string,
   choices: string[],
@@ -80,6 +81,92 @@ class QuizGame {
       this.endGame();
     }
   }
+
+  public getCurrentQuestion(): Question | null {
+    return this.currentQuestion;
+  }
+}
+
+// view
+interface eventListenerMap {
+  choices?: Function,
+}
+
+class View {
+  private questionText: HTMLElement;
+  private choices: HTMLElement[];
+  constructor() {
+    this.questionText = document.querySelector(".question-text") as HTMLElement;
+    this.choices = [0, 1, 2, 3]
+      .map((index) => "#choice-" + index.toString())
+      .map((id) => document.querySelector(id) as HTMLElement);
+    this.mapOnView = {
+      choices: this.choices,
+    }
+  }
+  displayQuestionTest(text: string): void {
+    this.questionText.textContent = text;
+  }
+  displayChoices(choiceArray: string[]): void {
+    this.choices.forEach((element, index) => {
+      element.textContent = choiceArray[index];
+    })
+  }
+  addEventListeners(eventListeners: eventListenerMap, context: unknown): void {
+    Object.entries(eventListeners).forEach((entry) => {
+      const [elementName, callback] = entry;
+      switch (elementName) {
+        case "choices":
+          this.choices.forEach((choiceElement) => {
+            choiceElement.addEventListener("click", callback.bind(context));
+          })
+          break;
+        default:
+          throw new Error("invalid key");
+          break;
+      }
+    })
+  }
+}
+
+class Presenter {
+  private game: QuizGame;
+  private view: View;
+  constructor(game: QuizGame, view: View) {
+    this.game = game;
+    this.view = view;
+
+    this.game.startGame();
+    this.renderAll();
+    this.initializeEventListeners();
+  }
+  renderAll(): void {
+    this.renderQuestionText();
+    this.renderChoices();
+  }
+  renderQuestionText(): void {
+    const currentQuestion = this.game.getCurrentQuestion();
+    if (!currentQuestion) { 
+      console.log("no current question");
+      return;
+    }
+    this.view.displayQuestionTest(currentQuestion.questionText);
+  }
+  renderChoices(): void {
+    const currentQuestion = this.game.getCurrentQuestion();
+    if (!currentQuestion) { 
+      console.log("no current question");
+      return;
+    }
+    this.view.displayChoices(currentQuestion.choices);
+  }
+  initializeEventListeners(): void {
+    this.view.addEventListeners({ choices: this.choiceCallback }, this);
+  }
+  choiceCallback(event): void {
+    const answer = event.target.textContent;
+    this.game.submitAnswer(answer);
+  }
 }
 
 const questions: Question[] = [
@@ -104,4 +191,5 @@ const questions: Question[] = [
 ]
 
 const game = new QuizGame(questions);
-game.startGame();
+const view = new View();
+const presenter = new Presenter(game, view);
