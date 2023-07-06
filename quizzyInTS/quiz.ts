@@ -85,6 +85,14 @@ class QuizGame {
   public getCurrentQuestion(): Question | null {
     return this.currentQuestion;
   }
+
+  public getPlayingState(): PlayingState {
+    return this.playingState;
+  }
+
+  public getScore(): number {
+    return this.score;
+  }
 }
 
 // view
@@ -95,24 +103,59 @@ interface eventListenerMap {
 class View {
   private questionText: HTMLElement;
   private choices: HTMLElement[];
+  private gameOver: HTMLElement;
+  private score: HTMLElement;
+
   constructor() {
     this.questionText = document.querySelector(".question-text") as HTMLElement;
     this.choices = [0, 1, 2, 3]
       .map((index) => "#choice-" + index.toString())
       .map((id) => document.querySelector(id) as HTMLElement);
-    this.mapOnView = {
-      choices: this.choices,
-    }
+    this.gameOver = document.querySelector(".game-over") as HTMLElement;
+    this.score = document.querySelector(".score") as HTMLElement;
   }
-  displayQuestionTest(text: string): void {
+
+  public displayQuestionText(text: string): void {
     this.questionText.textContent = text;
   }
-  displayChoices(choiceArray: string[]): void {
+
+  public displayChoices(choiceArray: string[]): void {
     this.choices.forEach((element, index) => {
       element.textContent = choiceArray[index];
     })
   }
-  addEventListeners(eventListeners: eventListenerMap, context: unknown): void {
+
+  public displayScore(score: number): void {
+    this.score.textContent = score.toString();
+  }
+
+  public hideQuestionText(): void {
+    this.questionText.setAttribute("hidden", "true");
+  }
+
+  public hideChoices(): void {
+    this.choices.forEach((c) => c.setAttribute("hidden", "true"));
+  }
+
+  public hideQuestion(): void {
+    this.hideQuestionText();
+    this.hideChoices();
+  }
+
+  public hideGameOver(): void {
+    this.gameOver.setAttribute("hidden", "true");
+  }
+
+  public exposeGameOver(): void {
+    this.gameOver.removeAttribute("hidden");
+  }
+
+  public gameOverScreen(): void {
+    this.hideQuestion();
+    this.exposeGameOver();
+  }
+
+  public addEventListeners(eventListeners: eventListenerMap, context: unknown): void {
     Object.entries(eventListeners).forEach((entry) => {
       const [elementName, callback] = entry;
       switch (elementName) {
@@ -132,6 +175,7 @@ class View {
 class Presenter {
   private game: QuizGame;
   private view: View;
+
   constructor(game: QuizGame, view: View) {
     this.game = game;
     this.view = view;
@@ -140,19 +184,23 @@ class Presenter {
     this.renderAll();
     this.initializeEventListeners();
   }
-  renderAll(): void {
+
+  private renderAll(): void {
     this.renderQuestionText();
     this.renderChoices();
+    this.renderScore();
   }
-  renderQuestionText(): void {
+
+  private renderQuestionText(): void {
     const currentQuestion = this.game.getCurrentQuestion();
     if (!currentQuestion) { 
       console.log("no current question");
       return;
     }
-    this.view.displayQuestionTest(currentQuestion.questionText);
+    this.view.displayQuestionText(currentQuestion.questionText);
   }
-  renderChoices(): void {
+
+  private renderChoices(): void {
     const currentQuestion = this.game.getCurrentQuestion();
     if (!currentQuestion) { 
       console.log("no current question");
@@ -160,14 +208,27 @@ class Presenter {
     }
     this.view.displayChoices(currentQuestion.choices);
   }
-  initializeEventListeners(): void {
+
+  private renderScore(): void {
+    this.view.displayScore(this.game.getScore());
+  }
+
+  private initializeEventListeners(): void {
     this.view.addEventListeners({ choices: this.choiceCallback }, this);
   }
-  choiceCallback(event): void {
-    const answer = event.target.textContent;
+
+  private choiceCallback(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    const answer = target.textContent ?? "";
     this.game.submitAnswer(answer);
+    this.game.advanceQuestion();
+    if (this.game.getPlayingState() === "finished") {
+      this.view.gameOverScreen();
+    }
+    this.renderAll();
   }
 }
+
 
 const questions: Question[] = [
   {
@@ -190,6 +251,26 @@ const questions: Question[] = [
   },
 ]
 
-const game = new QuizGame(questions);
-const view = new View();
-const presenter = new Presenter(game, view);
+async function getQuestions() {
+  const response = await fetch('https://the-trivia-api.com/v2/questions');
+  const questionsData = await response.json();
+  const questions = questionsData.map((question): Question => {
+    const randomIndex = Math.floor(Math.random() * question.incorrectAnswers.length);
+    const choices = question.incorrectAnswers;
+    choices.splice(randomIndex, 0, question.correctAnswer);
+    return {
+      questionText: question.question.text,
+      choices: choices,
+      playerAnswer: null,
+      correctAnswer: question.correctAnswer,
+    };
+  })
+  const game = new QuizGame(questions);
+  const view = new View();
+  const presenter = new Presenter(game, view);
+}
+getQuestions()
+
+// const game = new QuizGame(questions);
+// const view = new View();
+// const presenter = new Presenter(game, view);

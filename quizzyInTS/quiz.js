@@ -69,26 +69,56 @@ class QuizGame {
     getCurrentQuestion() {
         return this.currentQuestion;
     }
+    getPlayingState() {
+        return this.playingState;
+    }
+    getScore() {
+        return this.score;
+    }
 }
 class View {
     questionText;
     choices;
+    gameOver;
+    score;
     constructor() {
         this.questionText = document.querySelector(".question-text");
         this.choices = [0, 1, 2, 3]
             .map((index) => "#choice-" + index.toString())
             .map((id) => document.querySelector(id));
-        this.mapOnView = {
-            choices: this.choices,
-        };
+        this.gameOver = document.querySelector(".game-over");
+        this.score = document.querySelector(".score");
     }
-    displayQuestionTest(text) {
+    displayQuestionText(text) {
         this.questionText.textContent = text;
     }
     displayChoices(choiceArray) {
         this.choices.forEach((element, index) => {
             element.textContent = choiceArray[index];
         });
+    }
+    displayScore(score) {
+        this.score.textContent = score.toString();
+    }
+    hideQuestionText() {
+        this.questionText.setAttribute("hidden", "true");
+    }
+    hideChoices() {
+        this.choices.forEach((c) => c.setAttribute("hidden", "true"));
+    }
+    hideQuestion() {
+        this.hideQuestionText();
+        this.hideChoices();
+    }
+    hideGameOver() {
+        this.gameOver.setAttribute("hidden", "true");
+    }
+    exposeGameOver() {
+        this.gameOver.removeAttribute("hidden");
+    }
+    gameOverScreen() {
+        this.hideQuestion();
+        this.exposeGameOver();
     }
     addEventListeners(eventListeners, context) {
         Object.entries(eventListeners).forEach((entry) => {
@@ -119,6 +149,7 @@ class Presenter {
     renderAll() {
         this.renderQuestionText();
         this.renderChoices();
+        this.renderScore();
     }
     renderQuestionText() {
         const currentQuestion = this.game.getCurrentQuestion();
@@ -126,7 +157,7 @@ class Presenter {
             console.log("no current question");
             return;
         }
-        this.view.displayQuestionTest(currentQuestion.questionText);
+        this.view.displayQuestionText(currentQuestion.questionText);
     }
     renderChoices() {
         const currentQuestion = this.game.getCurrentQuestion();
@@ -136,12 +167,21 @@ class Presenter {
         }
         this.view.displayChoices(currentQuestion.choices);
     }
+    renderScore() {
+        this.view.displayScore(this.game.getScore());
+    }
     initializeEventListeners() {
         this.view.addEventListeners({ choices: this.choiceCallback }, this);
     }
     choiceCallback(event) {
-        const answer = event.target.textContent;
+        const target = event.target;
+        const answer = target.textContent ?? "";
         this.game.submitAnswer(answer);
+        this.game.advanceQuestion();
+        if (this.game.getPlayingState() === "finished") {
+            this.view.gameOverScreen();
+        }
+        this.renderAll();
     }
 }
 const questions = [
@@ -164,6 +204,25 @@ const questions = [
         playerAnswer: null
     },
 ];
-const game = new QuizGame(questions);
-const view = new View();
-const presenter = new Presenter(game, view);
+async function getQuestions() {
+    const response = await fetch('https://the-trivia-api.com/v2/questions');
+    const questionsData = await response.json();
+    const questions = questionsData.map((question) => {
+        const randomIndex = Math.floor(Math.random() * question.incorrectAnswers.length);
+        const choices = question.incorrectAnswers;
+        choices.splice(randomIndex, 0, question.correctAnswer);
+        return {
+            questionText: question.question.text,
+            choices: choices,
+            playerAnswer: null,
+            correctAnswer: question.correctAnswer,
+        };
+    });
+    const game = new QuizGame(questions);
+    const view = new View();
+    const presenter = new Presenter(game, view);
+}
+getQuestions();
+// const game = new QuizGame(questions);
+// const view = new View();
+// const presenter = new Presenter(game, view);
