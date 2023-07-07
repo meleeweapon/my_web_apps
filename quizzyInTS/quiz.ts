@@ -13,7 +13,7 @@ interface QuestionResult {
   result: Result,
 }
 
-type PlayingState = "not started" | "playing" | "finished";
+type PlayingState = "waiting for questions" | "playing" | "finished";
 // enum PlayingState {
 //   "not started",
 //   "playing",
@@ -26,25 +26,22 @@ class QuizGame {
   private score: number;
   private playingState: PlayingState;
 
-  constructor(questions: Question[]) {
-    if (!questions.length) { throw new Error("no questions were provided"); }
-    this.questions = questions;
-    this.currentQuestion = this.questions[0];
+  constructor() {
+    this.questions = [];
+    this.currentQuestion = null;
     this.score = 0;
-    this.playingState = "not started";
+    this.playingState = "waiting for questions";
   }
 
-  private setDefaultState(): void {
-    this.currentQuestion = this.questions[0];
-    this.score = 0;
-    this.playingState = "not started";
-  }
-
-  public startGame(): void {
+  public startGame(questions: Question[]): void {
     switch (this.playingState) {
-      case "not started":
+      case "waiting for questions":
+        if (!questions.length) { throw new Error("No questions were provided"); };
+        this.questions = questions;
+        this.currentQuestion = this.questions[0];
         this.playingState = "playing";
         break;
+
       default:
         break;
     }
@@ -95,9 +92,23 @@ class QuizGame {
   }
 }
 
+function addClass(classToBeAdded: string, currentClass: string): string {
+  const classes = currentClass.split(" ");
+  if (classes.includes(classToBeAdded)) { return currentClass; }
+  return `${currentClass} ${classToBeAdded}`;
+}
+
+function removeClass(classToBeRemoved: string, currentClass: string): string {
+  const classes = currentClass.split(" ");
+  if (!classes.includes(classToBeRemoved)) { return currentClass; }
+  classes.splice(classes.indexOf(classToBeRemoved), 1);
+  return classes.join(" ");
+}
+
 // view
 interface eventListenerMap {
   choices?: Function,
+  nextQuestion?: Function,
 }
 
 class View {
@@ -105,6 +116,7 @@ class View {
   private choices: HTMLElement[];
   private gameOver: HTMLElement;
   private score: HTMLElement;
+  private nextQuestion: HTMLElement;
 
   constructor() {
     this.questionText = document.querySelector(".question-text") as HTMLElement;
@@ -113,6 +125,7 @@ class View {
       .map((id) => document.querySelector(id) as HTMLElement);
     this.gameOver = document.querySelector(".game-over") as HTMLElement;
     this.score = document.querySelector(".score") as HTMLElement;
+    this.nextQuestion = document.querySelector(".next-question-btn") as HTMLElement;
   }
 
   public displayQuestionText(text: string): void {
@@ -150,9 +163,45 @@ class View {
     this.gameOver.removeAttribute("hidden");
   }
 
+  public exposeNextQuestion(): void {
+    this.nextQuestion.setAttribute("class", addClass("visible", this.nextQuestion.className));
+  }
+
+  public hideNextQuestion(): void {
+    this.nextQuestion.setAttribute("class", removeClass("visible", this.nextQuestion.className));
+  }
+
   public gameOverScreen(): void {
     this.hideQuestion();
     this.exposeGameOver();
+  }
+
+  public highlightCorrectAnswer(elementIndex: number): void {
+    const element = this.choices[elementIndex];
+    element.setAttribute("class", addClass("correct-answer", element.className));
+  }
+
+  public dehighlightCorrectAnswer(): void {
+    this.choices.forEach((choiceElement) => {
+      choiceElement.setAttribute("class", removeClass("correct-answer", choiceElement.className));
+    });
+  }
+
+  public highlightPlayerAnswerAsCorrect(elementIndex: number): void {
+    const element = this.choices[elementIndex];
+    element.setAttribute("class", addClass("correct-player-answer", element.className));
+  }
+
+  public highlightPlayerAnswerAsWrong(elementIndex: number): void {
+    const element = this.choices[elementIndex];
+    element.setAttribute("class", addClass("wrong-player-answer", element.className));
+  }
+
+  public dehighlightPlayerAnswer(): void {
+    this.choices.forEach((choiceElement) => {
+      choiceElement.setAttribute("class", removeClass("wrong-player-answer", choiceElement.className));
+      choiceElement.setAttribute("class", removeClass("correct-player-answer", choiceElement.className));
+    });
   }
 
   public addEventListeners(eventListeners: eventListenerMap, context: unknown): void {
@@ -164,6 +213,11 @@ class View {
             choiceElement.addEventListener("click", callback.bind(context));
           })
           break;
+
+        case "nextQuestion":
+          this.nextQuestion.addEventListener("click", callback.bind(context));
+          break;
+
         default:
           throw new Error("invalid key");
           break;
@@ -180,15 +234,27 @@ class Presenter {
     this.game = game;
     this.view = view;
 
-    this.game.startGame();
-    this.renderAll();
     this.initializeEventListeners();
+
+    this.getQuestionsAndStartGame();
   }
 
   private renderAll(): void {
     this.renderQuestionText();
     this.renderChoices();
     this.renderScore();
+    this.renderPlayerAnswerAndCorrectAnswer();
+    this.renderNextQuestionBtn();
+  }
+
+  private renderNextQuestionBtn(): void {
+    const currentQuestion = this.game.getCurrentQuestion();
+    if (!currentQuestion) { return; }
+    if (currentQuestion.playerAnswer === null) {
+      this.view.hideNextQuestion();
+      return;
+    }
+    this.view.exposeNextQuestion();
   }
 
   private renderQuestionText(): void {
@@ -213,18 +279,73 @@ class Presenter {
     this.view.displayScore(this.game.getScore());
   }
 
+  private renderPlayerAnswerAndCorrectAnswer(): void {
+    const currentQuestion = this.game.getCurrentQuestion();
+    if (!currentQuestion) { return; }
+    if (currentQuestion.playerAnswer === null) {
+      this.view.dehighlightCorrectAnswer();
+      this.view.dehighlightPlayerAnswer();
+      return;
+    }
+
+    const playerAnwserIndex = this.getChoiceIndex(currentQuestion.playerAnswer);
+    const correctAnwserIndex = this.getChoiceIndex(currentQuestion.correctAnswer);
+
+    this.view.highlightCorrectAnswer(correctAnwserIndex);
+    if (currentQuestion.correctAnswer === currentQuestion.playerAnswer) {
+      this.view.highlightPlayerAnswerAsCorrect(playerAnwserIndex);
+    } else {
+      this.view.highlightPlayerAnswerAsWrong(playerAnwserIndex);
+    }
+  }
+
+  private getChoiceIndex(choice: string): number {
+    const choices = this.game.getCurrentQuestion()?.choices;
+    const index = choices?.indexOf(choice);
+    if (index === undefined) { throw new Error("Invalid choice"); }
+    return index;
+  }
+
   private initializeEventListeners(): void {
-    this.view.addEventListeners({ choices: this.choiceCallback }, this);
+    this.view.addEventListeners({ 
+      choices: this.choiceCallback,
+      nextQuestion: this.nextQuestion,
+    }, this);
+  }
+
+  private nextQuestion(): void {
+    this.game.advanceQuestion();
+    this.renderAll();
   }
 
   private choiceCallback(event: MouseEvent): void {
+    const currentQuestion = this.game.getCurrentQuestion();
+    if (!currentQuestion) { return; }
+    if (currentQuestion.playerAnswer !== null) { return; }
     const target = event.target as HTMLElement;
     const answer = target.textContent ?? "";
     this.game.submitAnswer(answer);
-    this.game.advanceQuestion();
     if (this.game.getPlayingState() === "finished") {
       this.view.gameOverScreen();
     }
+    this.renderAll();
+  }
+
+  public async getQuestionsAndStartGame() {
+    const response = await fetch('https://the-trivia-api.com/v2/questions');
+    const questionsData = await response.json();
+    const questions = questionsData.map((question): Question => {
+      const randomIndex = Math.floor(Math.random() * question.incorrectAnswers.length);
+      const choices = question.incorrectAnswers;
+      choices.splice(randomIndex, 0, question.correctAnswer);
+      return {
+        questionText: question.question.text,
+        choices: choices,
+        playerAnswer: null,
+        correctAnswer: question.correctAnswer,
+      };
+    })
+    game.startGame(questions);
     this.renderAll();
   }
 }
@@ -251,26 +372,7 @@ const questions: Question[] = [
   },
 ]
 
-async function getQuestions() {
-  const response = await fetch('https://the-trivia-api.com/v2/questions');
-  const questionsData = await response.json();
-  const questions = questionsData.map((question): Question => {
-    const randomIndex = Math.floor(Math.random() * question.incorrectAnswers.length);
-    const choices = question.incorrectAnswers;
-    choices.splice(randomIndex, 0, question.correctAnswer);
-    return {
-      questionText: question.question.text,
-      choices: choices,
-      playerAnswer: null,
-      correctAnswer: question.correctAnswer,
-    };
-  })
-  const game = new QuizGame(questions);
-  const view = new View();
-  const presenter = new Presenter(game, view);
-}
-getQuestions()
 
-// const game = new QuizGame(questions);
-// const view = new View();
-// const presenter = new Presenter(game, view);
+const game = new QuizGame();
+const view = new View();
+const presenter = new Presenter(game, view);

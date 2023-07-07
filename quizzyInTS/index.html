@@ -5,8 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Quizzy</title>
   <style>
-    .body {
+    body {
       font-family: Arial, Helvetica, sans-serif;
+      background: #2e2a1d;
+      /* background: #353124; */
+      color: #ffffff;
     }
     .question {
       margin-left: auto;
@@ -24,7 +27,8 @@
       /* display: inline; */
       padding: 30px 10px;
       text-align: center;
-      border: 2px #51e8fb solid;
+      /* border: 2px #51e8fb solid; */
+      border: 2px #FFD6A5 solid;
       border-radius: 10px;
       font-size: x-large;
     }
@@ -39,12 +43,21 @@
       cursor: pointer;
       padding: 20px 10px;
       text-align: center;
-      border: 2px #51e8fb solid;
+      /* border: 2px #51e8fb solid; */
+      border: 2px #FFD6A5 solid;
       border-radius: 10px;
       font-size: larger;
     }
     .choice:hover {
-      background-color: #d7faff;
+      /* background-color: #d7faff; */
+      /* background-color: #5f5e23; */
+      background-color: #47462a;
+    }
+    .correct-player-answer:hover {
+      background-color: #566b2d;
+    }
+    .wrong-player-answer:hover {
+      background-color: #663415;
     }
     .game-over {
       margin-left: auto;
@@ -70,6 +83,36 @@
     .score-container {
       margin-top: 20px;
     }
+    .correct-player-answer {
+      /* background-color: #2ae83a; */
+      /* background-color: #CBFFA9; */
+      background-color: #42612d;
+    }
+    .wrong-player-answer {
+      /* background-color: #f03b3b; */
+      /* background-color: #FF9B9B; */
+      background-color: #5e2727;
+    }
+    .correct-answer {
+      border: 2px #49fd7c solid;
+    }
+    .next-question-btn {
+      text-align: center;
+      margin-top: 50px;
+      padding: 20px;
+      font-size: x-large;
+      background: #32323d;
+      border: 2px #9797fd solid;
+      color: #dedeff;
+      visibility: hidden;
+      cursor: pointer;
+    }
+    .next-question-btn:hover {
+      background: #454555;
+    }
+    .visible {
+      visibility: visible;
+    }
   </style>
 </head>
 <body>
@@ -82,7 +125,11 @@
       <div id="choice-2" class="choice"></div>
       <div id="choice-3" class="choice"></div>
     </div>
+    <div class="next-question-btn">
+      Next Question
+    </div>
   </div>
+
 
   <div class="game-over" hidden>
     <div class="finished">Finished!</div>
