@@ -113,10 +113,64 @@
     .visible {
       visibility: visible;
     }
+    .loading {
+      margin-left: auto;
+      margin-right: auto;
+      width: 1000px;
+      /* border: 2px black solid;
+      border-radius: 10px; */
+
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+
+      text-align: center;
+      font-size: xx-large;
+      color: #84733d;
+    }
+    .play-again {
+      text-align: center;
+      margin-top: 50px;
+      padding: 20px;
+      font-size: x-large;
+      background: #32323d;
+      border: 2px #9797fd solid;
+      color: #dedeff;
+      cursor: pointer;
+    }
+    .progress {
+      text-align: center;
+      font-size: x-large;
+      letter-spacing: 6px;
+
+      margin-left: auto;
+      margin-right: auto;
+      width: 1000px;
+      /* border: 2px black solid;
+      border-radius: 10px; */
+
+      position: absolute;
+      top: 95%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+
+      text-align: center;
+      font-size: xx-large;
+    }
+    .dot {
+      color: #FFD6A5;
+      display: inline;
+    }
+    .progressed {
+      color: #9797fd;
+    }
   </style>
 </head>
 <body>
-  <div class="question">
+  <div class="loading" >Loading...</div>
+
+  <div class="question" hidden>
     <div class="question-text">
     </div>
     <div class="choices">
@@ -130,13 +184,13 @@
     </div>
   </div>
 
-
   <div class="game-over" hidden>
     <div class="finished">Finished!</div>
     <div class="score-container">
       <div style="display: inline;">Score:</div>
       <div class="score"></div>
     </div>
+    <div class="play-again">Play Again</div>
   </div>
 
   <script src="quiz.js"></script>

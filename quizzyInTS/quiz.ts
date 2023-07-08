@@ -90,6 +90,10 @@ class QuizGame {
   public getScore(): number {
     return this.score;
   }
+
+  public getQuestions(): Question[] {
+    return this.questions;
+  }
 }
 
 function addClass(classToBeAdded: string, currentClass: string): string {
@@ -109,6 +113,7 @@ function removeClass(classToBeRemoved: string, currentClass: string): string {
 interface eventListenerMap {
   choices?: Function,
   nextQuestion?: Function,
+  playAgain?: Function,
 }
 
 class View {
@@ -117,6 +122,11 @@ class View {
   private gameOver: HTMLElement;
   private score: HTMLElement;
   private nextQuestion: HTMLElement;
+  private loading: HTMLElement;
+  private question: HTMLElement;
+  private playAgain: HTMLElement;
+  private progress: HTMLElement | null;
+  public progressDots: HTMLElement[];
 
   constructor() {
     this.questionText = document.querySelector(".question-text") as HTMLElement;
@@ -126,6 +136,11 @@ class View {
     this.gameOver = document.querySelector(".game-over") as HTMLElement;
     this.score = document.querySelector(".score") as HTMLElement;
     this.nextQuestion = document.querySelector(".next-question-btn") as HTMLElement;
+    this.loading = document.querySelector(".loading") as HTMLElement;
+    this.question = document.querySelector(".question") as HTMLElement;
+    this.playAgain = document.querySelector(".play-again") as HTMLElement;
+    this.progress = null;
+    this.progressDots = [];
   }
 
   public displayQuestionText(text: string): void {
@@ -142,6 +157,45 @@ class View {
     this.score.textContent = score.toString();
   }
 
+  public hideProgress(): void {
+    this.progress?.setAttribute("hidden", "true");
+  }
+
+  public hideProgressDots(): void {
+    this.progressDots.forEach((dot) => dot.setAttribute("hidden", "true"));
+  }
+
+  public displayProgress(currentQuestionIndex: number): void {
+    this.progressDots.forEach((dot, index) => {
+      if (index < currentQuestionIndex) {
+        dot.setAttribute("class", addClass("progressed", dot.className))
+      } else {
+        dot.setAttribute("class", removeClass("progressed", dot.className))
+      }
+    })
+  }
+
+  public initializeProgress(questionAmount: number): void {
+    this.progress = document.createElement("div") ;
+    this.progress.setAttribute("class", "progress");
+    for (let index = 0; index < questionAmount; index += 1) {
+      const dot = document.createElement("div");
+      dot.textContent = "•";
+      dot.setAttribute("class", "dot");
+      this.progressDots.push(dot);
+      this.progress.appendChild(dot);
+    }
+    document.body.appendChild(this.progress);
+  }
+
+  public hideLoading(): void {
+    this.loading.setAttribute("hidden", "true");
+  }
+
+  public exposeLoading(): void {
+    this.loading.removeAttribute("hidden");
+  }
+
   public hideQuestionText(): void {
     this.questionText.setAttribute("hidden", "true");
   }
@@ -151,8 +205,18 @@ class View {
   }
 
   public hideQuestion(): void {
-    this.hideQuestionText();
-    this.hideChoices();
+    this.question.setAttribute("hidden", "true");
+  }
+
+  public exposeQuestionText(): void {
+    this.questionText.removeAttribute("hidden");
+  }
+  public exposeChoices(): void {
+    this.choices.forEach((c) => c.removeAttribute("hidden"));
+  }
+
+  public exposeQuestion(): void {
+    this.question.removeAttribute("hidden");
   }
 
   public hideGameOver(): void {
@@ -173,6 +237,7 @@ class View {
 
   public gameOverScreen(): void {
     this.hideQuestion();
+    this.hideNextQuestion();
     this.exposeGameOver();
   }
 
@@ -218,6 +283,10 @@ class View {
           this.nextQuestion.addEventListener("click", callback.bind(context));
           break;
 
+        case "playAgain":
+          this.playAgain.addEventListener("click", callback.bind(context));
+          break;
+
         default:
           throw new Error("invalid key");
           break;
@@ -240,11 +309,43 @@ class Presenter {
   }
 
   private renderAll(): void {
+    this.renderLoading();
+    this.renderProgressDots();
     this.renderQuestionText();
     this.renderChoices();
     this.renderScore();
     this.renderPlayerAnswerAndCorrectAnswer();
     this.renderNextQuestionBtn();
+    this.renderGameOverScreen();
+  }
+
+  private renderLoading(): void {
+    if (this.game.getPlayingState() === "waiting for questions") {
+      this.view.exposeLoading();
+      this.view.hideQuestion();
+      return;
+    }
+    this.view.hideLoading();
+    this.view.exposeQuestion();
+  }
+
+  private renderProgressDots(): void {
+    if (this.game.getPlayingState() === "playing") {
+      if (!this.view.progressDots.length) {
+        this.view.initializeProgress(this.game.getQuestions().length);
+      }
+      const currentQuestion = this.game.getCurrentQuestion();
+      if (!currentQuestion) { throw new Error("Current question must not be null"); }
+      this.view.displayProgress(this.game.getQuestions().indexOf(currentQuestion));
+      return;
+    }
+    this.view.hideProgress();
+  }
+
+  private renderGameOverScreen(): void {
+    if (this.game.getPlayingState() === "finished") {
+      this.view.gameOverScreen();
+    }
   }
 
   private renderNextQuestionBtn(): void {
@@ -309,13 +410,18 @@ class Presenter {
   private initializeEventListeners(): void {
     this.view.addEventListeners({ 
       choices: this.choiceCallback,
-      nextQuestion: this.nextQuestion,
+      nextQuestion: this.nextQuestionCallback,
+      playAgain: this.playAgainCallback,
     }, this);
   }
 
-  private nextQuestion(): void {
+  private nextQuestionCallback(): void {
     this.game.advanceQuestion();
     this.renderAll();
+  }
+
+  private playAgainCallback(): void {
+    location.reload();
   }
 
   private choiceCallback(event: MouseEvent): void {
@@ -349,29 +455,6 @@ class Presenter {
     this.renderAll();
   }
 }
-
-
-const questions: Question[] = [
-  {
-    questionText: "1 + 1 = ?",
-    choices: ["5", "ten", "abraham lincoln", "2"],
-    correctAnswer: "2",
-    playerAnswer: null
-  },
-  {
-    questionText: "you are ___",
-    choices: ["beautiful", "ugly", "bad", "wrong"],
-    correctAnswer: "beautiful",
-    playerAnswer: null
-  },
-  {
-    questionText: "not (true or false)",
-    choices: ["true", "false"],
-    correctAnswer: "false",
-    playerAnswer: null
-  },
-]
-
 
 const game = new QuizGame();
 const view = new View();
