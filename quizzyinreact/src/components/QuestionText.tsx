@@ -7,7 +7,7 @@ interface QuestionTextProps {
 const QuestionText: React.FC<QuestionTextProps> = (props) => {
   const { questionText } = props;
 
-  return <div>{questionText}</div>;
+  return <div className="questionText">{questionText}</div>;
 }
 
 export default QuestionText;

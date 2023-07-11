@@ -1,5 +1,4 @@
-import React from "react";
-import { useState } from "react";
+import React, { useState, MouseEvent, MouseEventHandler } from "react";
 import QuestionText from "./QuestionText";
 import Choice from "./Choice";
 
@@ -18,9 +17,6 @@ interface QuestionResult {
 }
 
 const Question: React.FC = () => {
-  // const [questionText, setQuestionText] = useState<string>("what is up?");
-  // const [choices, setChoices] = useState<string[]>(["a", "b", "c", "d"]);
-
   const firstQuestion: Question = {
     questionText: "what is up",
     choices: ["good", "bad", "ok", "awesome"],
@@ -32,13 +28,23 @@ const Question: React.FC = () => {
 
   const { questionText, choices, correctAnswer, playerAnswer } = question;
 
+  const handleChoice: MouseEventHandler<HTMLDivElement> = (event): void => {
+    setQuestion((previousQuestion) => {
+      const targetElement = event.target as HTMLDivElement;
+      targetElement.className += " correct-player-answer";
+      return {...previousQuestion, playerAnswer: targetElement.textContent};
+    })
+  };
+
   return (
-    <>
+    <div className="question">
       <QuestionText questionText={questionText}/>
-      {choices.map((choice) => {
-        return <Choice content={choice}/>
-      })}
-    </>
+      <div className="choices">
+        {choices.map((choice) => {
+          return <Choice onClick={handleChoice} content={choice}/>
+        })}
+      </div>
+    </div>
   );
 };
 

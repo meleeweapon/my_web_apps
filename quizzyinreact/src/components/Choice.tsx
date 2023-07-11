@@ -1,13 +1,14 @@
-import React from "react";
+import React, { MouseEventHandler } from "react";
 
 interface ChoiceProps {
   content: string;
+  onClick: MouseEventHandler<HTMLDivElement>;
 }
 
 const Choice: React.FC<ChoiceProps> = (props) => {
-  const { content } = props;
+  const { content, onClick } = props;
 
-  return <div>{content}</div>;
+  return <div onClick={onClick} className="choice">{content}</div>;
 }
 
 export default Choice;
