@@ -1,6 +1,7 @@
 import React, { FC, ChangeEvent, useState } from 'react';
 import './App.css';
 import { ITask } from './interfaces';
+import Task from './components/Task';
 
 const App: FC = () => {
   const [taskContent, setTaskContent] = useState<string>("");
@@ -21,6 +22,9 @@ const App: FC = () => {
         text: taskContent, 
         deadline: deadline,
       };
+      setTaskContent("");
+      setDeadline(0);
+
       return [...previous, task];
     })
   }
@@ -29,19 +33,26 @@ const App: FC = () => {
     <div className="App">
       <div className='header'>
         <div className='inputContainer'>
-          <input type="text" onChange={handleTask} placeholder='Task' />
-          <input type="number" onChange={handleDeadline} placeholder='Deadline in Days' />
+          <input 
+            type="text" 
+            onChange={handleTask} 
+            name='task'
+            value={taskContent}
+            placeholder='Task' 
+          />
+          <input 
+            type="number" 
+            onChange={handleDeadline} 
+            name='deadline'
+            value={deadline}
+            placeholder='Deadline in Days' 
+          />
         </div>
         <button onClick={handleAddTask}>Add ITask</button>
       </div>
       <div className='toDoList'>
         {todoList.map((task) => {
-          return (
-            <>
-              <div>{task.text}</div>
-              <div>{task.deadline}</div>
-            </>
-          );
+          return <Task task={task}/>;
         })}
       </div>
     </div>

@@ -46,3 +46,30 @@
   flex: 85%;
   width: 100%;
 }
+
+.task {
+  /* text-align: center; */
+  display: flex;
+  padding: 20px;
+  background-color: rgb(184, 184, 236);
+  margin-top: 20px;
+  margin-bottom: 20px;
+  width: 60%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.taskText {
+  flex: 80%;
+  height: 100%;
+}
+
+.deadline {
+  flex: 10%;
+  text-align: center;
+}
+
+.delete {
+  flex: 20%;
+  text-align: right;
+}
