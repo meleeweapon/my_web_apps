@@ -6,14 +6,15 @@ interface TaskProps {
 }
 
 const Task = ({ task }: TaskProps) => {
-
   return (
     <div className="task">
-      <span className="taskText">{task.text}</span>
-      <span className="deadline">{task.deadline}</span>
+      <div className="content">
+        <span className="taskText">{task.text}</span>
+        <span className="deadline">{task.deadline}</span>
+      </div>
       <button className="delete">X</button>
     </div>
-  )
-}
+  );
+};
 
 export default Task;

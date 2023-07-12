@@ -45,24 +45,29 @@
 .toDoList {
   flex: 85%;
   width: 100%;
+  display: flex;
+  align-items: center;
+  padding-top: 50px;
+  flex-direction: column;
 }
 
 .task {
-  /* text-align: center; */
+  width: 500px;
+  height: 50px;
   display: flex;
-  padding: 20px;
-  background-color: rgb(184, 184, 236);
-  margin-top: 20px;
-  margin-bottom: 20px;
-  width: 60%;
-  margin-left: auto;
-  margin-right: auto;
+  color: white;
+  margin: 15px;
 }
 
-.taskText {
+.task .taskText {
   flex: 80%;
   height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgb(184, 184, 236);
 }
+
 
 .deadline {
   flex: 10%;
