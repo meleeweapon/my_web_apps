@@ -128,7 +128,7 @@ body {
   /* background-color: #FF9B9B; */
   background-color: #5e2727;
 }
-.correct-answer {
+.correctAnswer {
   border: 2px #49fd7c solid;
 }
 .nextQuestionBtn {

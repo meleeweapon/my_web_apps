@@ -1,6 +1,6 @@
-import React from 'react';
-import './App.css';
-import Question from './components/Question';
+import React from "react";
+import "./App.css";
+import Question from "./components/Question";
 
 const App: React.FC = () => {
   return (
@@ -8,6 +8,6 @@ const App: React.FC = () => {
       <Question />
     </div>
   );
-}
+};
 
 export default App;

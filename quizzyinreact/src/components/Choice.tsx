@@ -5,14 +5,16 @@ interface ChoiceProps {
   onClick: MouseEventHandler<HTMLDivElement>;
   isCorrect: boolean;
   isChosen: boolean;
+  reveal: boolean;
 }
 
 const Choice: React.FC<ChoiceProps> = ({
   content,
   onClick,
-  isCorrect,
   isChosen,
-}) => {
+  isCorrect,
+  reveal,
+}: ChoiceProps) => {
   return (
     <div
       onClick={onClick}
@@ -22,7 +24,7 @@ const Choice: React.FC<ChoiceProps> = ({
             ? "correctPlayerAnswer"
             : "wrongPlayerAnswer"
           : ""
-      }`}
+      } ${reveal ? (isCorrect ? "correctAnswer" : "") : ""}`}
     >
       {content}
     </div>
