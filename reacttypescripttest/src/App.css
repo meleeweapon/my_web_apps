@@ -59,8 +59,8 @@
   margin: 15px;
 }
 
-.task .taskText {
-  flex: 80%;
+.task .content {
+  flex: 70%;
   height: 100%;
   display: flex;
   justify-content: center;
@@ -68,13 +68,24 @@
   background-color: rgb(184, 184, 236);
 }
 
-
-.deadline {
-  flex: 10%;
-  text-align: center;
+.task .content span {
+  display: grid;
+  place-items: center;
+  border: 1px solid white;
+  width: 100%;
+  height: 100%;
+  font-size: 18px;
+  border-right: none;
+  background-color: rgb(98, 211, 67);
 }
 
-.delete {
+.task button {
+  color: white;
   flex: 20%;
-  text-align: right;
+  height: 100%;
+  border: none;
+  background-color: purple;
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+  cursor: pointer;
 }

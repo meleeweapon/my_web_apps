@@ -11,3 +11,9 @@ export interface IQuestionResult {
   question: IQuestion;
   result: Result;
 }
+
+export interface IApiQuestion {
+  incorrectAnswers: string[];
+  correctAnswer: string;
+  question: { text: string };
+}
