@@ -1,0 +1,37 @@
+.App {
+  text-align: center;
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  justify-content: center;
+  align-items: center;
+}
+
+.schulteTable {
+  display: grid;
+  grid-template-rows: auto auto auto auto;
+  grid-template-columns: auto auto auto auto;
+  width: 600px;
+  height: 600px;
+  row-gap: 10px;
+  column-gap: 10px;
+  padding: 10px;
+  background-color: #827e78;
+  border-radius: 15px;
+}
+
+.tile {
+  font-size: x-large;
+  border: none;
+  background-color: #f4bdbd;
+  border-radius: 15px;
+}
+
+.tile:hover {
+  background-color: #f3d1d1;
+  cursor: pointer;
+}
+
+.clicked {
+  background-color: #f22626;
+}
