@@ -1,37 +1,73 @@
 .App {
+  font-size: x-large;
   text-align: center;
   display: flex;
   height: 100vh;
   width: 100vw;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
 }
 
+button {
+  font-size: x-large;
+}
+
 .schulteTable {
+  margin: 0px 70px;
+  flex: 60%;
   display: grid;
-  grid-template-rows: auto auto auto auto;
-  grid-template-columns: auto auto auto auto;
+  /* grid-template-rows: auto auto auto auto;
+  grid-template-columns: auto auto auto auto; */
+  grid-template-rows: 1fr 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
   width: 600px;
   height: 600px;
+  max-width: 600px;
   row-gap: 10px;
   column-gap: 10px;
   padding: 10px;
-  background-color: #827e78;
+  background-color: #001c30;
   border-radius: 15px;
 }
 
 .tile {
   font-size: x-large;
   border: none;
-  background-color: #f4bdbd;
   border-radius: 15px;
+  cursor: pointer;
 }
 
-.tile:hover {
+.unclicked {
+  background-color: #f4bdbd;
+}
+
+.unclicked:hover {
   background-color: #f3d1d1;
-  cursor: pointer;
 }
 
 .clicked {
   background-color: #f22626;
+}
+
+.clicked:hover {
+}
+
+.controlPanel {
+  height: 100%;
+  flex: 15%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.playAgain {
+  width: 250px;
+  padding: 20px 0px;
+  cursor: pointer;
+}
+
+.statistics {
+  height: 100%;
+  flex: 15%;
 }

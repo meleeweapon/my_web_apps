@@ -1,10 +1,13 @@
-// TODO: fix grid tiles being slightly different width
-
 import React, { FC, useState } from "react";
 
-interface SchulteTableProps {}
+interface SchulteTableProps {
+  completed: boolean;
+  setCompleted: React.Dispatch<React.SetStateAction<boolean>>;
+}
 
 const SchulteTable: FC<SchulteTableProps> = (props) => {
+  const { completed, setCompleted } = props;
+
   const [numbers, setNumbers] = useState<number[]>(
     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16].sort(
       () => Math.random() - 0.5
@@ -13,7 +16,7 @@ const SchulteTable: FC<SchulteTableProps> = (props) => {
 
   const [expectedNumber, setExpectedNumber] = useState<number>(1);
 
-  const [completed, setCompleted] = useState<boolean>(false);
+  // const [completed, setCompleted] = useState<boolean>(false);
 
   const handleTile = (theNumber: number): void => {
     if (theNumber !== expectedNumber) {
@@ -26,14 +29,14 @@ const SchulteTable: FC<SchulteTableProps> = (props) => {
     setExpectedNumber((previousExpectedNumber) => previousExpectedNumber + 1);
   };
 
-  return completed ? (
-    <div>Finished</div>
-  ) : (
+  return (
     <div className="schulteTable">
       {numbers.map((theNumber, index) => {
         return (
           <button
-            className={`tile ${theNumber < expectedNumber ? " clicked" : ""}`}
+            className={`tile ${
+              theNumber < expectedNumber ? " clicked" : " unclicked"
+            }`}
             key={index}
             onClick={() => handleTile(theNumber)}
           >
