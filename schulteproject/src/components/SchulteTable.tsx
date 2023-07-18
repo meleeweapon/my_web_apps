@@ -1,22 +1,24 @@
 import React, { FC, useState } from "react";
+import { shuffleInPlace } from "../utils";
 
 interface SchulteTableProps {
   completed: boolean;
   setCompleted: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
+const orderedNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
+Object.freeze(orderedNumbers);
+
 const SchulteTable: FC<SchulteTableProps> = (props) => {
   const { completed, setCompleted } = props;
 
   const [numbers, setNumbers] = useState<number[]>(
-    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16].sort(
-      () => Math.random() - 0.5
-    )
+    shuffleInPlace([...orderedNumbers])
   );
 
-  const [expectedNumber, setExpectedNumber] = useState<number>(1);
-
-  // const [completed, setCompleted] = useState<boolean>(false);
+  const [expectedNumber, setExpectedNumber] = useState<number>(
+    Math.min(...numbers)
+  );
 
   const handleTile = (theNumber: number): void => {
     if (theNumber !== expectedNumber) {
