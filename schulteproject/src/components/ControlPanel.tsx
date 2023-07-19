@@ -1,18 +1,29 @@
 import React, { FC, useContext } from "react";
+import { GameState } from "../interfaces";
 
 interface ControlPanelProps {
-  completed: boolean;
+  gameState: GameState;
+  setGameState: React.Dispatch<React.SetStateAction<GameState>>;
 }
 
 // function ControlPanel(props: ControlPanelProps) {
 const ControlPanel: FC<ControlPanelProps> = (props) => {
-  const { completed } = props;
-  // const completed = useContext(smt);
+  const { gameState, setGameState } = props;
+
+  const handleStartGame = () => {
+    setGameState("Playing");
+  };
 
   return (
     <div className="controlPanel">
-      {completed && <button className="playAgain">Play Again</button>}
-      {/* {<button className="playAgain">Play Again</button>} */}
+      {gameState === "NotStarted" && (
+        <button className="playAgain" onClick={handleStartGame}>
+          Start
+        </button>
+      )}
+      {gameState === "Completed" && (
+        <button className="playAgain">Play Again</button>
+      )}
     </div>
   );
 };

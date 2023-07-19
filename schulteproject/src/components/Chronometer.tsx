@@ -1,31 +1,70 @@
 import React, { FC, useContext, useEffect, useState } from "react";
-import { CompletedContext } from "../App";
+import { GameStateContext } from "../App";
 
 interface ChronometerProps {}
 
-// let initiatedInterval = false;
-
 const Chronometer: FC<ChronometerProps> = (props) => {
   const [seconds, setSeconds] = useState<number>(0);
-  const completed = useContext(CompletedContext);
+  const [chronometerRunning, setChronometerRunning] = useState<boolean>(false);
+  const [clearChronometer, setClearChronometer] = useState<() => void>(
+    () => {}
+  );
+  const gameState = useContext(GameStateContext);
 
-  useEffect(() => {
-    // if (initiatedInterval) {
-    //   return;
-    // }
-    // initiatedInterval = true;
+  const initiateChronometer = () => {
     const interval = setInterval(() => {
-      if (completed) {
-        clearInterval(interval);
-        return;
-      }
       setSeconds((previousSeconds) => {
         return previousSeconds + 1;
       });
     }, 1000);
 
+    return interval;
+  };
+
+  useEffect(() => {
+    let interval: NodeJS.Timer | undefined;
+    switch (gameState) {
+      case "NotStarted":
+        break;
+
+      case "Playing":
+        if (chronometerRunning) {
+          interval = setInterval(() => {
+            setSeconds((previousSeconds) => {
+              return previousSeconds + 1;
+            });
+          }, 1000);
+        }
+        break;
+
+      case "Completed":
+        break;
+    }
+    // switch (gameState) {
+    //   case "NotStarted":
+    //     break;
+
+    //   case "Playing":
+    //     if (chronometerRunning) break;
+    //     // interval = initiateChronometer();
+    //     interval = setInterval(() => {
+    //       setSeconds((previousSeconds) => {
+    //         return previousSeconds + 1;
+    //       });
+    //     }, 1000);
+    //     setChronometerRunning(true);
+    //     break;
+
+    //   case "Completed":
+    //     if (!chronometerRunning) break;
+    //     // if (!interval) throw new Error();
+    //     // clearInterval(interval);
+    //     setChronometerRunning(false);
+    //     break;
+    // }
+
     return () => clearInterval(interval);
-  }, [completed]);
+  }, [chronometerRunning, gameState]);
 
   return (
     <div className="chronometer">

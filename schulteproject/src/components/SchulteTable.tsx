@@ -1,16 +1,19 @@
 import React, { FC, useState } from "react";
 import { shuffleInPlace } from "../utils";
+import { GameState } from "../interfaces";
 
 interface SchulteTableProps {
-  completed: boolean;
-  setCompleted: React.Dispatch<React.SetStateAction<boolean>>;
+  // completed: boolean;
+  // setCompleted: React.Dispatch<React.SetStateAction<boolean>>;
+  gameState: GameState;
+  setGameState: React.Dispatch<React.SetStateAction<GameState>>;
 }
 
 const orderedNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
 Object.freeze(orderedNumbers);
 
 const SchulteTable: FC<SchulteTableProps> = (props) => {
-  const { completed, setCompleted } = props;
+  const { gameState, setGameState } = props;
 
   const [numbers, setNumbers] = useState<number[]>(
     shuffleInPlace([...orderedNumbers])
@@ -21,12 +24,12 @@ const SchulteTable: FC<SchulteTableProps> = (props) => {
   );
 
   const handleTile = (theNumber: number): void => {
-    if (theNumber !== expectedNumber) {
+    if (theNumber !== expectedNumber || gameState !== "Playing") {
       return;
     }
 
     if (theNumber === Math.max(...numbers)) {
-      setCompleted(true);
+      setGameState("Completed");
     }
     setExpectedNumber((previousExpectedNumber) => previousExpectedNumber + 1);
   };

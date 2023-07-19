@@ -1,21 +1,22 @@
 import React, { createContext, useState } from "react";
-import logo from "./logo.svg";
 import "./App.css";
 import SchulteTable from "./components/SchulteTable";
 import ControlPanel from "./components/ControlPanel";
 import Statistics from "./components/Statistics";
+import { GameState } from "./interfaces";
 
-export const CompletedContext = createContext(false);
+export const GameStateContext = createContext<GameState>("NotStarted");
 
 function App() {
-  const [completed, setCompleted] = useState<boolean>(false);
+  // const [completed, setCompleted] = useState<boolean>(false);
+  const [gameState, setGameState] = useState<GameState>("NotStarted");
   return (
     <div className="App">
-      <ControlPanel completed={completed} />
-      <SchulteTable completed={completed} setCompleted={setCompleted} />
-      <CompletedContext.Provider value={completed}>
+      <ControlPanel gameState={gameState} setGameState={setGameState} />
+      <SchulteTable gameState={gameState} setGameState={setGameState} />
+      <GameStateContext.Provider value={gameState}>
         <Statistics />
-      </CompletedContext.Provider>
+      </GameStateContext.Provider>
     </div>
   );
 }
