@@ -1,19 +1,19 @@
 import React, { FC, useState } from "react";
 import { shuffleInPlace } from "../utils";
-import { GameState } from "../interfaces";
+import { GameState, MatchesType } from "../interfaces";
 
 interface SchulteTableProps {
-  // completed: boolean;
-  // setCompleted: React.Dispatch<React.SetStateAction<boolean>>;
   gameState: GameState;
   setGameState: React.Dispatch<React.SetStateAction<GameState>>;
+  setMatches: React.Dispatch<React.SetStateAction<MatchesType>>;
+  roundStartTimestamp: number | undefined;
 }
 
 const orderedNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
 Object.freeze(orderedNumbers);
 
 const SchulteTable: FC<SchulteTableProps> = (props) => {
-  const { gameState, setGameState } = props;
+  const { gameState, setGameState, setMatches, roundStartTimestamp } = props;
 
   const [numbers, setNumbers] = useState<number[]>(
     shuffleInPlace([...orderedNumbers])
@@ -23,6 +23,10 @@ const SchulteTable: FC<SchulteTableProps> = (props) => {
     Math.min(...numbers)
   );
 
+  const [currentRoundTime, setCurrentRoundTime] = useState<
+    number | undefined
+  >();
+
   const handleTile = (theNumber: number): void => {
     if (theNumber !== expectedNumber || gameState !== "Playing") {
       return;
@@ -30,6 +34,12 @@ const SchulteTable: FC<SchulteTableProps> = (props) => {
 
     if (theNumber === Math.max(...numbers)) {
       setGameState("Completed");
+      if (!roundStartTimestamp)
+        throw new Error("Round start time can't be undefined.");
+      const temporaryRoundTime = new Date().getTime() - roundStartTimestamp;
+      setCurrentRoundTime(temporaryRoundTime);
+      // if (!currentRoundTime) throw new Error("Round time can't be undefined.");
+      setMatches((previousMatches) => [...previousMatches, temporaryRoundTime]);
     }
     setExpectedNumber((previousExpectedNumber) => previousExpectedNumber + 1);
   };

@@ -1,15 +1,15 @@
 import React, { FC, useContext, useEffect, useState } from "react";
-import { GameStateContext } from "../App";
+import { GameStateContext, MatchesContext } from "../App";
+import { formatMatch } from "../utils";
+
+// TODO: make chronometer into a class or a closure
 
 interface ChronometerProps {}
 
 const Chronometer: FC<ChronometerProps> = (props) => {
-  const [seconds, setSeconds] = useState<number>(0);
-  const [chronometerRunning, setChronometerRunning] = useState<boolean>(false);
-  const [clearChronometer, setClearChronometer] = useState<() => void>(
-    () => {}
-  );
+  const matches = useContext(MatchesContext);
   const gameState = useContext(GameStateContext);
+  const [seconds, setSeconds] = useState<number>(0);
 
   const initiateChronometer = () => {
     const interval = setInterval(() => {
@@ -28,47 +28,30 @@ const Chronometer: FC<ChronometerProps> = (props) => {
         break;
 
       case "Playing":
-        if (chronometerRunning) {
-          interval = setInterval(() => {
-            setSeconds((previousSeconds) => {
-              return previousSeconds + 1;
-            });
-          }, 1000);
-        }
+        interval = initiateChronometer();
         break;
 
       case "Completed":
+        clearInterval(interval);
         break;
     }
-    // switch (gameState) {
-    //   case "NotStarted":
-    //     break;
-
-    //   case "Playing":
-    //     if (chronometerRunning) break;
-    //     // interval = initiateChronometer();
-    //     interval = setInterval(() => {
-    //       setSeconds((previousSeconds) => {
-    //         return previousSeconds + 1;
-    //       });
-    //     }, 1000);
-    //     setChronometerRunning(true);
-    //     break;
-
-    //   case "Completed":
-    //     if (!chronometerRunning) break;
-    //     // if (!interval) throw new Error();
-    //     // clearInterval(interval);
-    //     setChronometerRunning(false);
-    //     break;
-    // }
-
     return () => clearInterval(interval);
-  }, [chronometerRunning, gameState]);
+  }, [gameState]);
 
   return (
     <div className="chronometer">
-      <span>{seconds} s</span>
+      {(() => {
+        switch (gameState) {
+          case "NotStarted":
+            return <div>--</div>;
+          case "Playing":
+            return <span>{seconds} s</span>;
+          case "Completed":
+            return (
+              <span>{formatMatch(matches[matches.length - 1])} seconds</span>
+            );
+        }
+      })()}
     </div>
   );
 };
