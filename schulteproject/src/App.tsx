@@ -4,6 +4,7 @@ import SchulteTable from "./components/SchulteTable";
 import ControlPanel from "./components/ControlPanel";
 import Statistics from "./components/Statistics";
 import { GameState, MatchesType } from "./interfaces";
+import { shuffleInPlace } from "./utils";
 
 export const GameStateContext = createContext<GameState>("NotStarted");
 export const MatchesContext = createContext<MatchesType>([]);
@@ -21,8 +22,10 @@ const getMatchesFromLocalStorage = () => {
   return JSON.parse(matches);
 };
 
+const orderedNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
+Object.freeze(orderedNumbers);
+
 function App() {
-  // const [completed, setCompleted] = useState<boolean>(false);
   const [gameState, setGameState] = useState<GameState>("NotStarted");
   const [matches, setMatches] = useState<MatchesType>(
     getMatchesFromLocalStorage
@@ -30,6 +33,30 @@ function App() {
   const [roundStartTimestamp, setRoundStartTimestamp] = useState<
     number | undefined
   >();
+  const [numbers, setNumbers] = useState<number[] | undefined>();
+  const [expectedNumber, setExpectedNumber] = useState<number>(
+    Math.min(...orderedNumbers)
+  );
+
+  // const [currentRoundTime, setCurrentRoundTime] = useState<
+  //   number | undefined
+  // >();
+
+  const startGame = () => {
+    setNumbers(shuffleInPlace([...orderedNumbers]));
+    setExpectedNumber(Math.min(...orderedNumbers));
+    setGameState("Playing");
+    setRoundStartTimestamp(new Date().getTime());
+  };
+
+  const endGame = () => {
+    setGameState("Completed");
+    if (!roundStartTimestamp)
+      throw new Error("Round start time can't be undefined.");
+    const temporaryRoundTime = new Date().getTime() - roundStartTimestamp;
+    // setCurrentRoundTime(temporaryRoundTime);
+    setMatches((previousMatches) => [...previousMatches, temporaryRoundTime]);
+  };
 
   useEffect(() => {
     localStorage.setItem(matchesKey, JSON.stringify(matches));
@@ -41,12 +68,15 @@ function App() {
         gameState={gameState}
         setGameState={setGameState}
         setRoundStartTimestamp={setRoundStartTimestamp}
+        startGame={startGame}
       />
       <SchulteTable
         gameState={gameState}
-        setGameState={setGameState}
-        setMatches={setMatches}
-        roundStartTimestamp={roundStartTimestamp}
+        expectedNumber={expectedNumber}
+        setExpectedNumber={setExpectedNumber}
+        numbers={numbers}
+        orderedNumbers={orderedNumbers}
+        endGame={endGame}
       />
       <MatchesContext.Provider value={matches}>
         <SetMatchesContext.Provider value={setMatches}>

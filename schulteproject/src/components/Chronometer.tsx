@@ -33,6 +33,7 @@ const Chronometer: FC<ChronometerProps> = (props) => {
 
       case "Completed":
         clearInterval(interval);
+        setSeconds(0);
         break;
     }
     return () => clearInterval(interval);

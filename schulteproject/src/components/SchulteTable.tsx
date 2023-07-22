@@ -1,64 +1,55 @@
-import React, { FC, useState } from "react";
-import { shuffleInPlace } from "../utils";
-import { GameState, MatchesType } from "../interfaces";
+import React, { FC } from "react";
+import { GameState } from "../interfaces";
 
 interface SchulteTableProps {
   gameState: GameState;
-  setGameState: React.Dispatch<React.SetStateAction<GameState>>;
-  setMatches: React.Dispatch<React.SetStateAction<MatchesType>>;
-  roundStartTimestamp: number | undefined;
+  expectedNumber: number;
+  setExpectedNumber: React.Dispatch<React.SetStateAction<number>>;
+  numbers: number[] | undefined;
+  orderedNumbers: number[];
+  endGame: () => void;
 }
 
-const orderedNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
-Object.freeze(orderedNumbers);
-
 const SchulteTable: FC<SchulteTableProps> = (props) => {
-  const { gameState, setGameState, setMatches, roundStartTimestamp } = props;
-
-  const [numbers, setNumbers] = useState<number[]>(
-    shuffleInPlace([...orderedNumbers])
-  );
-
-  const [expectedNumber, setExpectedNumber] = useState<number>(
-    Math.min(...numbers)
-  );
-
-  const [currentRoundTime, setCurrentRoundTime] = useState<
-    number | undefined
-  >();
+  const {
+    gameState,
+    expectedNumber,
+    setExpectedNumber,
+    numbers,
+    orderedNumbers,
+    endGame,
+  } = props;
 
   const handleTile = (theNumber: number): void => {
-    if (theNumber !== expectedNumber || gameState !== "Playing") {
+    if (theNumber !== expectedNumber || gameState !== "Playing" || !numbers) {
       return;
     }
 
+    // win condition
     if (theNumber === Math.max(...numbers)) {
-      setGameState("Completed");
-      if (!roundStartTimestamp)
-        throw new Error("Round start time can't be undefined.");
-      const temporaryRoundTime = new Date().getTime() - roundStartTimestamp;
-      setCurrentRoundTime(temporaryRoundTime);
-      // if (!currentRoundTime) throw new Error("Round time can't be undefined.");
-      setMatches((previousMatches) => [...previousMatches, temporaryRoundTime]);
+      endGame();
     }
+
     setExpectedNumber((previousExpectedNumber) => previousExpectedNumber + 1);
+  };
+
+  const renderTile = (tileNumber: number, index: number) => {
+    return (
+      <button
+        className={`tile ${
+          tileNumber < expectedNumber ? " clicked" : " unclicked"
+        }`}
+        key={index}
+        onClick={() => handleTile(tileNumber)}
+      >
+        {tileNumber}
+      </button>
+    );
   };
 
   return (
     <div className="schulteTable">
-      {numbers.map((theNumber, index) => {
-        return (
-          <button
-            className={`tile ${
-              theNumber < expectedNumber ? " clicked" : " unclicked"
-            }`}
-            key={index}
-            onClick={() => handleTile(theNumber)}
-          >
-            {theNumber}
-          </button>
-        );
-      })}
+      {!numbers ? orderedNumbers.map(renderTile) : numbers.map(renderTile)}
     </div>
   );
 };

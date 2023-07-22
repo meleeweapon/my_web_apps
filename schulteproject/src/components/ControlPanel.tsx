@@ -7,15 +7,14 @@ interface ControlPanelProps {
   setRoundStartTimestamp: React.Dispatch<
     React.SetStateAction<number | undefined>
   >;
+  startGame: () => void;
 }
 
-// function ControlPanel(props: ControlPanelProps) {
 const ControlPanel: FC<ControlPanelProps> = (props) => {
-  const { gameState, setGameState, setRoundStartTimestamp } = props;
+  const { gameState, startGame } = props;
 
   const handleStartGame = () => {
-    setGameState("Playing");
-    setRoundStartTimestamp(new Date().getTime());
+    startGame();
   };
 
   return (
@@ -26,7 +25,9 @@ const ControlPanel: FC<ControlPanelProps> = (props) => {
         </button>
       )}
       {gameState === "Completed" && (
-        <button className="playAgain">Play Again</button>
+        <button className="playAgain" onClick={handleStartGame}>
+          Play Again
+        </button>
       )}
     </div>
   );
