@@ -15,8 +15,8 @@ button {
 }
 
 .schulteTable {
-  margin: 0px 70px;
-  flex: 60%;
+  /*   flex: 60%; */
+  /* margin: auto; */
   display: grid;
   /* grid-template-rows: auto auto auto auto;
   grid-template-columns: auto auto auto auto; */
@@ -34,7 +34,7 @@ button {
 
 .tile {
   border: 1px solid black;
-  font-size: x-large;
+  font-size: xx-large;
   /* border: none; */
   border-radius: 15px;
   cursor: pointer;
@@ -59,15 +59,16 @@ button {
 .controlPanel {
   background-color: #855de0;
   height: 100%;
-  flex: 15%;
+  flex: 20%;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
 }
 
 .playAgain {
-  width: 250px;
+  width: 210px;
+  height: 70px;
   padding: 20px 0px;
   cursor: pointer;
 }
@@ -75,7 +76,7 @@ button {
 .statistics {
   background-color: #855de0;
   height: 100%;
-  flex: 15%;
+  flex: 20%;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -95,6 +96,33 @@ button {
   flex: 80%;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.toggleVisibilityContainer {
+  width: 100%;
+  flex: 10%;
+}
+
+.toggleVisibility {
+  float: right;
+  margin: 10px;
+}
+
+.playAgainContainer {
+  flex: 90%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.tableContainer {
+  flex: 60%;
+  height: 100%;
+  display: flex;
   align-items: center;
   justify-content: center;
 }

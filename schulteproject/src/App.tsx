@@ -6,6 +6,9 @@ import Statistics from "./components/Statistics";
 import { GameState, MatchesType } from "./interfaces";
 import { shuffleInPlace } from "./utils";
 
+// TODO: make control panel and statistics have position absolute
+// TODO: make a hide panels button
+
 export const GameStateContext = createContext<GameState>("NotStarted");
 export const MatchesContext = createContext<MatchesType>([]);
 export const SetMatchesContext = createContext<React.Dispatch<
@@ -37,6 +40,7 @@ function App() {
   const [expectedNumber, setExpectedNumber] = useState<number>(
     Math.min(...orderedNumbers)
   );
+  const [displayOnlyTable, setDisplayOnlyTable] = useState<boolean>(false);
 
   // const [currentRoundTime, setCurrentRoundTime] = useState<
   //   number | undefined
@@ -69,15 +73,19 @@ function App() {
         setGameState={setGameState}
         setRoundStartTimestamp={setRoundStartTimestamp}
         startGame={startGame}
+        setDisplayOnlyTable={setDisplayOnlyTable}
+        hidden={false}
       />
-      <SchulteTable
-        gameState={gameState}
-        expectedNumber={expectedNumber}
-        setExpectedNumber={setExpectedNumber}
-        numbers={numbers}
-        orderedNumbers={orderedNumbers}
-        endGame={endGame}
-      />
+      <div className="tableContainer">
+        <SchulteTable
+          gameState={gameState}
+          expectedNumber={expectedNumber}
+          setExpectedNumber={setExpectedNumber}
+          numbers={numbers}
+          orderedNumbers={orderedNumbers}
+          endGame={endGame}
+        />
+      </div>
       <MatchesContext.Provider value={matches}>
         <SetMatchesContext.Provider value={setMatches}>
           <GameStateContext.Provider value={gameState}>
