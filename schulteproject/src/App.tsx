@@ -6,8 +6,8 @@ import Statistics from "./components/Statistics";
 import { GameState, MatchesType } from "./interfaces";
 import { shuffleInPlace } from "./utils";
 
-// TODO: make control panel and statistics have position absolute
-// TODO: make a hide panels button
+// TODO: change the replay/play buttons place into schultes table
+// TODO: with position absolute.
 
 export const GameStateContext = createContext<GameState>("NotStarted");
 export const MatchesContext = createContext<MatchesType>([]);
@@ -28,7 +28,7 @@ const getMatchesFromLocalStorage = () => {
 const orderedNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
 Object.freeze(orderedNumbers);
 
-function App() {
+const App = () => {
   const [gameState, setGameState] = useState<GameState>("NotStarted");
   const [matches, setMatches] = useState<MatchesType>(
     getMatchesFromLocalStorage
@@ -74,7 +74,7 @@ function App() {
         setRoundStartTimestamp={setRoundStartTimestamp}
         startGame={startGame}
         setDisplayOnlyTable={setDisplayOnlyTable}
-        hidden={false}
+        hidden={displayOnlyTable}
       />
       <div className="tableContainer">
         <SchulteTable
@@ -89,12 +89,12 @@ function App() {
       <MatchesContext.Provider value={matches}>
         <SetMatchesContext.Provider value={setMatches}>
           <GameStateContext.Provider value={gameState}>
-            <Statistics />
+            <Statistics hidden={displayOnlyTable} />
           </GameStateContext.Provider>
         </SetMatchesContext.Provider>
       </MatchesContext.Provider>
     </div>
   );
-}
+};
 
 export default App;

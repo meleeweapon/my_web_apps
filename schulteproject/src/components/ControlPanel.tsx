@@ -1,4 +1,4 @@
-import React, { FC, useContext } from "react";
+import React, { FC } from "react";
 import { GameState } from "../interfaces";
 
 interface ControlPanelProps {
@@ -26,29 +26,37 @@ const ControlPanel: FC<ControlPanelProps> = (props) => {
   };
 
   return (
-    <div className="controlPanel">
-      <div className="toggleVisibilityContainer">
-        <button
-          className="toggleVisibility tile unclicked"
-          onClick={handleToggleVisibility}
-        >
-          ←
-        </button>
-      </div>
+    <>
+      <button
+        className={`exposePanels tile unclicked ${!hidden && "hidden"}`}
+        onClick={handleToggleVisibility}
+      >
+        →
+      </button>
+      <div className={`controlPanel ${hidden && "hidden"}`}>
+        <div className="toggleVisibilityContainer">
+          <button
+            className="toggleVisibility tile unclicked"
+            onClick={handleToggleVisibility}
+          >
+            ←
+          </button>
+        </div>
 
-      <div className="playAgainContainer">
-        {gameState === "NotStarted" && (
-          <button className="playAgain" onClick={handleStartGame}>
-            Start
-          </button>
-        )}
-        {gameState === "Completed" && (
-          <button className="playAgain" onClick={handleStartGame}>
-            Play Again
-          </button>
-        )}
+        <div className="playAgainContainer">
+          {gameState === "NotStarted" && (
+            <button className="playAgain" onClick={handleStartGame}>
+              Start
+            </button>
+          )}
+          {gameState === "Completed" && (
+            <button className="playAgain" onClick={handleStartGame}>
+              Play Again
+            </button>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
