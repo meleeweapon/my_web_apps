@@ -9,6 +9,8 @@ import { shuffleInPlace } from "./utils";
 // TODO: change the replay/play buttons place into schultes table
 // TODO: with position absolute.
 
+// TODO: add special effect when pr is achieved
+
 export const GameStateContext = createContext<GameState>("NotStarted");
 export const MatchesContext = createContext<MatchesType>([]);
 export const SetMatchesContext = createContext<React.Dispatch<
@@ -84,6 +86,7 @@ const App = () => {
           numbers={numbers}
           orderedNumbers={orderedNumbers}
           endGame={endGame}
+          startGame={startGame}
         />
       </div>
       <MatchesContext.Provider value={matches}>

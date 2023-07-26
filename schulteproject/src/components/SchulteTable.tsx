@@ -1,5 +1,7 @@
 import React, { FC } from "react";
 import { GameState } from "../interfaces";
+import ReplaySvg from "./ReplaySvg";
+import PlaySvg from "./PlaySvg";
 
 interface SchulteTableProps {
   gameState: GameState;
@@ -8,6 +10,7 @@ interface SchulteTableProps {
   numbers: number[] | undefined;
   orderedNumbers: number[];
   endGame: () => void;
+  startGame: () => void;
 }
 
 const SchulteTable: FC<SchulteTableProps> = (props) => {
@@ -18,6 +21,7 @@ const SchulteTable: FC<SchulteTableProps> = (props) => {
     numbers,
     orderedNumbers,
     endGame,
+    startGame,
   } = props;
 
   const handleTile = (theNumber: number): void => {
@@ -50,6 +54,11 @@ const SchulteTable: FC<SchulteTableProps> = (props) => {
   return (
     <div className="schulteTable">
       {!numbers ? orderedNumbers.map(renderTile) : numbers.map(renderTile)}
+      {gameState !== "Playing" && (
+        <button className="tableReplay" onClick={startGame}>
+          {gameState === "NotStarted" ? <PlaySvg /> : <ReplaySvg />}
+        </button>
+      )}
     </div>
   );
 };
