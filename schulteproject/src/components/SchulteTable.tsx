@@ -2,13 +2,14 @@ import React, { FC } from "react";
 import { GameState } from "../interfaces";
 import ReplaySvg from "./ReplaySvg";
 import PlaySvg from "./PlaySvg";
+import { gridSizeToArray, gridSizeToCss } from "../utils";
 
 interface SchulteTableProps {
   gameState: GameState;
   expectedNumber: number;
   setExpectedNumber: React.Dispatch<React.SetStateAction<number>>;
   numbers: number[] | undefined;
-  orderedNumbers: number[];
+  gridSize: number;
   endGame: () => void;
   startGame: () => void;
 }
@@ -19,7 +20,7 @@ const SchulteTable: FC<SchulteTableProps> = (props) => {
     expectedNumber,
     setExpectedNumber,
     numbers,
-    orderedNumbers,
+    gridSize,
     endGame,
     startGame,
   } = props;
@@ -52,8 +53,10 @@ const SchulteTable: FC<SchulteTableProps> = (props) => {
   };
 
   return (
-    <div className="schulteTable">
-      {!numbers ? orderedNumbers.map(renderTile) : numbers.map(renderTile)}
+    <div className={`schulteTable ${gridSizeToCss(gridSize)}`}>
+      {!numbers
+        ? gridSizeToArray(gridSize).map(renderTile)
+        : numbers.map(renderTile)}
       {gameState !== "Playing" && (
         <button className="tableReplay" onClick={startGame}>
           {gameState === "NotStarted" ? <PlaySvg /> : <ReplaySvg />}

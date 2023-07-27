@@ -30,8 +30,6 @@ button:hover {
   display: grid;
   /* grid-template-rows: auto auto auto auto;
   grid-template-columns: auto auto auto auto; */
-  grid-template-rows: 1fr 1fr 1fr 1fr;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
   width: 600px;
   height: 600px;
   max-width: 600px;
@@ -40,6 +38,21 @@ button:hover {
   padding: 10px;
   background-color: #a076f9;
   border-radius: 15px;
+}
+
+.grid3x3 {
+  grid-template-rows: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.grid4x4 {
+  grid-template-rows: 1fr 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+}
+
+.grid5x5 {
+  grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
 }
 
 .tile {

@@ -10,10 +10,12 @@ interface ControlPanelProps {
   startGame: () => void;
   setDisplayOnlyTable: React.Dispatch<React.SetStateAction<boolean>>;
   hidden: boolean;
+  setGridSize: React.Dispatch<React.SetStateAction<number>>;
 }
 
 const ControlPanel: FC<ControlPanelProps> = (props) => {
-  const { gameState, startGame, setDisplayOnlyTable, hidden } = props;
+  const { gameState, startGame, setDisplayOnlyTable, hidden, setGridSize } =
+    props;
 
   const handleStartGame = () => {
     startGame();
@@ -54,6 +56,14 @@ const ControlPanel: FC<ControlPanelProps> = (props) => {
               Play Again
             </button>
           )}
+        </div>
+
+        <div className="gameSettings">
+          <div className="gridSetting">
+            <button onClick={() => setGridSize(3)}>3 x 3</button>
+            <button onClick={() => setGridSize(4)}>4 x 4</button>
+            <button onClick={() => setGridSize(5)}>5 x 5</button>
+          </div>
         </div>
       </div>
     </>
