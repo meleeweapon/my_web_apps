@@ -6,14 +6,16 @@ import Statistics from "./components/Statistics";
 import { GameState, MatchesType } from "./interfaces";
 import { gridSizeToArray, shuffleInPlace } from "./utils";
 
-// TODO: add special effect when pr is achieved.
-// TODO: add new game modes: 3x3 4x4 5x5, reaction, memory, reverse, classic...
-// TODO: add help features, accessibility features...
+// TODO: in order to do below, i might wanna make gridSize into an enum
 // TODO: make match records special to every game mode
+// TODO: add new game modes: reaction, memory, reverse, classic...
 // TODO: consider adding a "linear" gamemode, where
 // numbers are in a 1x16 grid for example
-// FIX: wrong styling after game ends and grid size is changed
-// FIX: changing grid size after game starts
+
+// misc: instead of using gridSizeChangedWhenCompleted,
+// i could change the game state to not started
+// misc: add special effect when pr is achieved.
+// misc: add help features, accessibility features...
 
 export const GameStateContext = createContext<GameState>("NotStarted");
 export const MatchesContext = createContext<MatchesType>([]);
@@ -48,14 +50,23 @@ const App = () => {
   const [expectedNumber, setExpectedNumber] = useState<number>(
     Math.min(...gridSizeToArray(gridSize))
   );
+  const [gridSizeChangedWhenCompleted, setGridSizeChangedWhenCompleted] =
+    useState<boolean>(false);
 
   // const [currentRoundTime, setCurrentRoundTime] = useState<
   //   number | undefined
   // >();
 
-  const startGame = () => {
-    setNumbers(shuffleInPlace([...gridSizeToArray(gridSize)]));
+  const resetExpectedNumber = () =>
     setExpectedNumber(Math.min(...gridSizeToArray(gridSize)));
+
+  const shuffleTable = () =>
+    setNumbers(shuffleInPlace([...gridSizeToArray(gridSize)]));
+
+  const startGame = () => {
+    setGridSizeChangedWhenCompleted(false);
+    shuffleTable();
+    resetExpectedNumber();
     setGameState("Playing");
     setRoundStartTimestamp(new Date().getTime());
   };
@@ -83,6 +94,8 @@ const App = () => {
         setDisplayOnlyTable={setDisplayOnlyTable}
         setGridSize={setGridSize}
         hidden={displayOnlyTable}
+        setGridSizeChangedWhenCompleted={setGridSizeChangedWhenCompleted}
+        resetExpectedNumber={resetExpectedNumber}
       />
       <div className="tableContainer">
         <SchulteTable
@@ -93,6 +106,7 @@ const App = () => {
           gridSize={gridSize}
           endGame={endGame}
           startGame={startGame}
+          gridSizeChangedWhenCompleted={gridSizeChangedWhenCompleted}
         />
       </div>
       <MatchesContext.Provider value={matches}>

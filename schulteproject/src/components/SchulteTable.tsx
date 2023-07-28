@@ -12,6 +12,7 @@ interface SchulteTableProps {
   gridSize: number;
   endGame: () => void;
   startGame: () => void;
+  gridSizeChangedWhenCompleted: boolean;
 }
 
 const SchulteTable: FC<SchulteTableProps> = (props) => {
@@ -23,6 +24,7 @@ const SchulteTable: FC<SchulteTableProps> = (props) => {
     gridSize,
     endGame,
     startGame,
+    gridSizeChangedWhenCompleted,
   } = props;
 
   const handleTile = (theNumber: number): void => {
@@ -52,10 +54,12 @@ const SchulteTable: FC<SchulteTableProps> = (props) => {
     );
   };
 
+  const orderedTable = () => gridSizeToArray(gridSize).map(renderTile);
+
   return (
     <div className={`schulteTable ${gridSizeToCss(gridSize)}`}>
-      {!numbers
-        ? gridSizeToArray(gridSize).map(renderTile)
+      {!numbers || gridSizeChangedWhenCompleted
+        ? orderedTable()
         : numbers.map(renderTile)}
       {gameState !== "Playing" && (
         <button className="tableReplay" onClick={startGame}>

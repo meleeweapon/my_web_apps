@@ -24,7 +24,10 @@ const MatchesInfo: FC<MatchesInfoProps> = (props) => {
       ) : (
         <>
           <div>Personal Best: {personalBestSeconds} s</div>
-          <div>Last Played: {lastMatchSeconds} s</div>
+          <div>
+            Last Played: {lastMatchSeconds} s
+            {lastMatchSeconds === personalBestSeconds && " ⭐"}
+          </div>
         </>
       )}
     </div>

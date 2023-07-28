@@ -11,11 +11,22 @@ interface ControlPanelProps {
   setDisplayOnlyTable: React.Dispatch<React.SetStateAction<boolean>>;
   hidden: boolean;
   setGridSize: React.Dispatch<React.SetStateAction<number>>;
+  setGridSizeChangedWhenCompleted: React.Dispatch<
+    React.SetStateAction<boolean>
+  >;
+  resetExpectedNumber: () => void;
 }
 
 const ControlPanel: FC<ControlPanelProps> = (props) => {
-  const { gameState, startGame, setDisplayOnlyTable, hidden, setGridSize } =
-    props;
+  const {
+    gameState,
+    startGame,
+    setDisplayOnlyTable,
+    hidden,
+    setGridSize,
+    setGridSizeChangedWhenCompleted,
+    resetExpectedNumber,
+  } = props;
 
   const handleStartGame = () => {
     startGame();
@@ -25,6 +36,21 @@ const ControlPanel: FC<ControlPanelProps> = (props) => {
     setDisplayOnlyTable(
       (previousDisplayOnlyTable) => !previousDisplayOnlyTable
     );
+  };
+
+  const handleGridSizeSetting = (gridSize: number): void => {
+    switch (gameState) {
+      case "Playing":
+        return;
+      case "NotStarted":
+        break;
+      case "Completed":
+        setGridSizeChangedWhenCompleted(true);
+        resetExpectedNumber();
+        break;
+    }
+
+    setGridSize(gridSize);
   };
 
   return (
@@ -60,9 +86,9 @@ const ControlPanel: FC<ControlPanelProps> = (props) => {
 
         <div className="gameSettings">
           <div className="gridSetting">
-            <button onClick={() => setGridSize(3)}>3 x 3</button>
-            <button onClick={() => setGridSize(4)}>4 x 4</button>
-            <button onClick={() => setGridSize(5)}>5 x 5</button>
+            <button onClick={() => handleGridSizeSetting(3)}>3 x 3</button>
+            <button onClick={() => handleGridSizeSetting(4)}>4 x 4</button>
+            <button onClick={() => handleGridSizeSetting(5)}>5 x 5</button>
           </div>
         </div>
       </div>
