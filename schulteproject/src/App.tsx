@@ -1,44 +1,40 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useEffect, useState } from "react";
 import "./App.css";
 import SchulteTable from "./components/SchulteTable";
 import ControlPanel from "./components/ControlPanel";
 import Statistics from "./components/Statistics";
-import { GameState, MatchesType } from "./interfaces";
+import { GameState, GridSize, MatchRecord } from "./interfaces";
 import { gridSizeToArray, shuffleInPlace } from "./utils";
 
-// TODO: in order to do below, i might wanna make gridSize into an enum
 // TODO: make match records special to every game mode
+// TODO: instead of using gridSizeChangedWhenCompleted,
 // TODO: add new game modes: reaction, memory, reverse, classic...
 // TODO: consider adding a "linear" gamemode, where
 // numbers are in a 1x16 grid for example
 
-// misc: instead of using gridSizeChangedWhenCompleted,
 // i could change the game state to not started
 // misc: add special effect when pr is achieved.
 // misc: add help features, accessibility features...
 
 export const GameStateContext = createContext<GameState>("NotStarted");
-export const MatchesContext = createContext<MatchesType>([]);
+export const MatchesContext = createContext<MatchRecord[]>([]);
 export const SetMatchesContext = createContext<React.Dispatch<
-  React.SetStateAction<MatchesType>
+  React.SetStateAction<MatchRecord[]>
 > | null>(null);
 
 export const matchesKey = "matches";
-const getMatchesFromLocalStorage = () => {
+const getMatchesFromLocalStorage = (): MatchRecord[] => {
   const matches = localStorage.getItem(matchesKey);
   if (matches === null) {
     localStorage.setItem(matchesKey, JSON.stringify([]));
     return [];
   }
-  return JSON.parse(matches);
+  return JSON.parse(matches) as MatchRecord[];
 };
-
-// const orderedNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
-// Object.freeze(orderedNumbers);
 
 const App = () => {
   const [gameState, setGameState] = useState<GameState>("NotStarted");
-  const [matches, setMatches] = useState<MatchesType>(
+  const [matches, setMatches] = useState<MatchRecord[]>(
     getMatchesFromLocalStorage
   );
   const [roundStartTimestamp, setRoundStartTimestamp] = useState<
@@ -46,16 +42,12 @@ const App = () => {
   >();
   const [numbers, setNumbers] = useState<number[] | undefined>();
   const [displayOnlyTable, setDisplayOnlyTable] = useState<boolean>(false);
-  const [gridSize, setGridSize] = useState<number>(4);
+  const [gridSize, setGridSize] = useState<GridSize>(GridSize.Size4x4);
   const [expectedNumber, setExpectedNumber] = useState<number>(
     Math.min(...gridSizeToArray(gridSize))
   );
   const [gridSizeChangedWhenCompleted, setGridSizeChangedWhenCompleted] =
     useState<boolean>(false);
-
-  // const [currentRoundTime, setCurrentRoundTime] = useState<
-  //   number | undefined
-  // >();
 
   const resetExpectedNumber = () =>
     setExpectedNumber(Math.min(...gridSizeToArray(gridSize)));
@@ -77,7 +69,11 @@ const App = () => {
       throw new Error("Round start time can't be undefined.");
     const temporaryRoundTime = new Date().getTime() - roundStartTimestamp;
     // setCurrentRoundTime(temporaryRoundTime);
-    setMatches((previousMatches) => [...previousMatches, temporaryRoundTime]);
+    const record: MatchRecord = {
+      durationInMilliseconds: temporaryRoundTime,
+      gridSize: gridSize,
+    };
+    setMatches((previousMatches) => [...previousMatches, record]);
   };
 
   useEffect(() => {

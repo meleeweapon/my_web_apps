@@ -1,6 +1,6 @@
 import React, { FC, useContext, useEffect, useState } from "react";
 import { GameStateContext, MatchesContext } from "../App";
-import { formatMatch } from "../utils";
+import { formatMatchDuration } from "../utils";
 
 // TODO: make chronometer into a class or a closure
 
@@ -49,7 +49,9 @@ const Chronometer: FC<ChronometerProps> = (props) => {
             return <span>{seconds} s</span>;
           case "Completed":
             return (
-              <span>{formatMatch(matches[matches.length - 1])} seconds</span>
+              <span>
+                {formatMatchDuration(matches[matches.length - 1])} seconds
+              </span>
             );
         }
       })()}

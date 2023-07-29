@@ -1,6 +1,6 @@
 import React, { FC, useContext, useState } from "react";
 import { MatchesContext, SetMatchesContext } from "../App";
-import { formatMatch } from "../utils";
+import { formatMatchDuration } from "../utils";
 
 type MatchesInfoProps = {};
 
@@ -13,8 +13,19 @@ const MatchesInfo: FC<MatchesInfoProps> = (props) => {
     setMatches([]);
   };
 
-  const lastMatchSeconds = formatMatch(matches[matches.length - 1]);
-  const personalBestSeconds = formatMatch(Math.min(...matches));
+  const findPersonalBestRecord = () =>
+    matches.reduce((previousMatch, currentMatch) =>
+      previousMatch.durationInMilliseconds < currentMatch.durationInMilliseconds
+        ? previousMatch
+        : currentMatch
+    );
+
+  const personalBestRecord = matches.length
+    ? findPersonalBestRecord()
+    : undefined;
+
+  // const lastMatchSeconds = formatMatchDuration(matches[matches.length - 1]);
+  // const personalBestSeconds = formatMatchDuration(Math.min(...matches));
 
   return (
     <div className="matchesInfo">

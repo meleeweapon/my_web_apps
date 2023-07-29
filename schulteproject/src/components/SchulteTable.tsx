@@ -1,5 +1,5 @@
 import React, { FC } from "react";
-import { GameState } from "../interfaces";
+import { GameState, GridSize } from "../interfaces";
 import ReplaySvg from "./ReplaySvg";
 import PlaySvg from "./PlaySvg";
 import { gridSizeToArray, gridSizeToCss } from "../utils";
@@ -9,7 +9,7 @@ interface SchulteTableProps {
   expectedNumber: number;
   setExpectedNumber: React.Dispatch<React.SetStateAction<number>>;
   numbers: number[] | undefined;
-  gridSize: number;
+  gridSize: GridSize;
   endGame: () => void;
   startGame: () => void;
   gridSizeChangedWhenCompleted: boolean;
