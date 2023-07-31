@@ -6,8 +6,11 @@ export const shuffleInPlace = (array: any[]) => {
 
 export const formatMatchDuration = (match: MatchRecord) => {
   const matchMilliseconds = match.durationInMilliseconds;
-  return (matchMilliseconds / 1000).toFixed(2);
+  return formatMillisecondsToSeconds(matchMilliseconds);
 };
+
+export const formatMillisecondsToSeconds = (milliseconds: number) =>
+  (milliseconds / 1000).toFixed(2);
 
 export const numberArray = (
   start: number,
@@ -24,15 +27,17 @@ export const numberArray = (
 export const gridSizeToArray = (gridSize: GridSize) =>
   numberArray(1, gridSize + 1, 1);
 
-export const gridSizeToCss = (gridSize: GridSize) => {
-  switch (gridSize) {
-    case GridSize.Size3x3:
-      return "grid3x3";
-    case GridSize.Size4x4:
-      return "grid4x4";
-    case GridSize.Size5x5:
-      return "grid5x5";
-    default:
-      throw new Error("Undefined grid size.");
-  }
-};
+export const gridSizeToCss = (() => {
+  const lookUp: { [key in GridSize]: string } = {
+    [GridSize.Size3x3]: "grid3x3",
+    [GridSize.Size4x4]: "grid4x4",
+    [GridSize.Size5x5]: "grid5x5",
+  };
+  return (gridSize: GridSize) => lookUp[gridSize];
+})();
+
+// TODO: implement grid size to display
+
+export const last = <T,>(arr: T[]): T | undefined => arr[arr.length - 1];
+
+export const gridSizeToDisplay = (gridSize: number): string => "";

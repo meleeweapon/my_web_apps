@@ -1,12 +1,14 @@
 import React, { FC, useContext, useState } from "react";
-import { MatchesContext, SetMatchesContext } from "../App";
-import { formatMatchDuration } from "../utils";
+import { GridSizeContext, MatchesContext, SetMatchesContext } from "../App";
+import { formatMatchDuration, last } from "../utils";
+import { GridSize } from "../interfaces";
 
-type MatchesInfoProps = {};
+interface MatchesInfoProps {}
 
 const MatchesInfo: FC<MatchesInfoProps> = (props) => {
   const matches = useContext(MatchesContext);
   const setMatches = useContext(SetMatchesContext);
+  const gridSize = useContext(GridSizeContext);
 
   const handleReset = () => {
     if (!setMatches) throw new Error("setMatches must not be null");
@@ -14,22 +16,33 @@ const MatchesInfo: FC<MatchesInfoProps> = (props) => {
   };
 
   const findPersonalBestRecord = () =>
-    matches.reduce((previousMatch, currentMatch) =>
-      previousMatch.durationInMilliseconds < currentMatch.durationInMilliseconds
-        ? previousMatch
-        : currentMatch
-    );
+    matches.length
+      ? matches.reduce((previousMatch, currentMatch) =>
+          previousMatch.durationInMilliseconds <
+          currentMatch.durationInMilliseconds
+            ? previousMatch
+            : currentMatch
+        )
+      : undefined;
 
-  const personalBestRecord = matches.length
-    ? findPersonalBestRecord()
+  const personalBestRecord = findPersonalBestRecord();
+  const personalBestSeconds = personalBestRecord
+    ? formatMatchDuration(personalBestRecord)
     : undefined;
 
-  // const lastMatchSeconds = formatMatchDuration(matches[matches.length - 1]);
-  // const personalBestSeconds = formatMatchDuration(Math.min(...matches));
+  // i might wanna add date to match record type and sort them that way
+  const findLastPlayed = () => last(matches);
+  const lastMatchRecord = findLastPlayed();
+  const lastMatchSeconds = lastMatchRecord
+    ? formatMatchDuration(lastMatchRecord)
+    : undefined;
 
   return (
     <div className="matchesInfo">
       <button onClick={handleReset}>Reset</button>
+
+      <div>{gridSize}</div>
+
       {matches.length <= 0 ? (
         <div>No records yet.</div>
       ) : (

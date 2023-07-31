@@ -6,21 +6,24 @@ import Statistics from "./components/Statistics";
 import { GameState, GridSize, MatchRecord } from "./interfaces";
 import { gridSizeToArray, shuffleInPlace } from "./utils";
 
-// TODO: make match records special to every game mode
+// TODO: make match records special to every game mode.
 // TODO: instead of using gridSizeChangedWhenCompleted,
-// TODO: add new game modes: reaction, memory, reverse, classic...
-// TODO: consider adding a "linear" gamemode, where
-// numbers are in a 1x16 grid for example
-
 // i could change the game state to not started
+// TODO: add new game modes: reaction, memory, reverse, vanilla...
+// TODO: consider adding a "linear" gamemode, where
+// numbers are in a 1x16 grid for example.
+
 // misc: add special effect when pr is achieved.
 // misc: add help features, accessibility features...
+// misc: add indicator for the expected value.
+// misc: add indicator for current game settings (grid size, gamemode etc).
 
 export const GameStateContext = createContext<GameState>("NotStarted");
 export const MatchesContext = createContext<MatchRecord[]>([]);
 export const SetMatchesContext = createContext<React.Dispatch<
   React.SetStateAction<MatchRecord[]>
 > | null>(null);
+export const GridSizeContext = createContext<GridSize>(GridSize.Size4x4);
 
 export const matchesKey = "matches";
 const getMatchesFromLocalStorage = (): MatchRecord[] => {
@@ -105,13 +108,15 @@ const App = () => {
           gridSizeChangedWhenCompleted={gridSizeChangedWhenCompleted}
         />
       </div>
-      <MatchesContext.Provider value={matches}>
-        <SetMatchesContext.Provider value={setMatches}>
-          <GameStateContext.Provider value={gameState}>
-            <Statistics hidden={displayOnlyTable} />
-          </GameStateContext.Provider>
-        </SetMatchesContext.Provider>
-      </MatchesContext.Provider>
+      <GridSizeContext.Provider value={gridSize}>
+        <MatchesContext.Provider value={matches}>
+          <SetMatchesContext.Provider value={setMatches}>
+            <GameStateContext.Provider value={gameState}>
+              <Statistics hidden={displayOnlyTable} />
+            </GameStateContext.Provider>
+          </SetMatchesContext.Provider>
+        </MatchesContext.Provider>
+      </GridSizeContext.Provider>
     </div>
   );
 };
