@@ -1,7 +1,15 @@
 import React, { FC, useContext, useState } from "react";
 import { GridSizeContext, MatchesContext, SetMatchesContext } from "../App";
-import { formatMatchDuration, last } from "../utils";
-import { GridSize } from "../interfaces";
+import {
+  findLastPlayed,
+  findPersonalBestRecord,
+  findSettingSpecificMatches,
+  formatMatchDuration,
+  gridSizeToDisplay,
+  last,
+} from "../utils";
+import { GridSize, MatchRecord } from "../interfaces";
+import { Match } from "@testing-library/react";
 
 interface MatchesInfoProps {}
 
@@ -15,24 +23,17 @@ const MatchesInfo: FC<MatchesInfoProps> = (props) => {
     setMatches([]);
   };
 
-  const findPersonalBestRecord = () =>
-    matches.length
-      ? matches.reduce((previousMatch, currentMatch) =>
-          previousMatch.durationInMilliseconds <
-          currentMatch.durationInMilliseconds
-            ? previousMatch
-            : currentMatch
-        )
-      : undefined;
+  // TODO: find a better word than settings, settings sounds technical,
+  // apply the same strategy as changing gamemode name 'classic' to 'vanilla'
+  const settingSpecificMatches = findSettingSpecificMatches(matches, gridSize);
 
-  const personalBestRecord = findPersonalBestRecord();
+  const personalBestRecord = findPersonalBestRecord(settingSpecificMatches);
   const personalBestSeconds = personalBestRecord
     ? formatMatchDuration(personalBestRecord)
     : undefined;
 
-  // i might wanna add date to match record type and sort them that way
-  const findLastPlayed = () => last(matches);
-  const lastMatchRecord = findLastPlayed();
+  // TODO: i might wanna add date to match record type and sort them that way
+  const lastMatchRecord = findLastPlayed(settingSpecificMatches);
   const lastMatchSeconds = lastMatchRecord
     ? formatMatchDuration(lastMatchRecord)
     : undefined;
@@ -41,16 +42,16 @@ const MatchesInfo: FC<MatchesInfoProps> = (props) => {
     <div className="matchesInfo">
       <button onClick={handleReset}>Reset</button>
 
-      <div>{gridSize}</div>
+      <div>{gridSizeToDisplay(gridSize)}</div>
 
-      {matches.length <= 0 ? (
+      {settingSpecificMatches.length <= 0 ? (
         <div>No records yet.</div>
       ) : (
         <>
           <div>Personal Best: {personalBestSeconds} s</div>
           <div>
             Last Played: {lastMatchSeconds} s
-            {lastMatchSeconds === personalBestSeconds && " ⭐"}
+            {lastMatchRecord === personalBestRecord && " ⭐"}
           </div>
         </>
       )}

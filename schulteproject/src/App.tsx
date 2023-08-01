@@ -6,9 +6,7 @@ import Statistics from "./components/Statistics";
 import { GameState, GridSize, MatchRecord } from "./interfaces";
 import { gridSizeToArray, shuffleInPlace } from "./utils";
 
-// TODO: make match records special to every game mode.
-// TODO: instead of using gridSizeChangedWhenCompleted,
-// i could change the game state to not started
+// TODO: change set game state so it does needed things when changing state.
 // TODO: add new game modes: reaction, memory, reverse, vanilla...
 // TODO: consider adding a "linear" gamemode, where
 // numbers are in a 1x16 grid for example.
@@ -49,8 +47,6 @@ const App = () => {
   const [expectedNumber, setExpectedNumber] = useState<number>(
     Math.min(...gridSizeToArray(gridSize))
   );
-  const [gridSizeChangedWhenCompleted, setGridSizeChangedWhenCompleted] =
-    useState<boolean>(false);
 
   const resetExpectedNumber = () =>
     setExpectedNumber(Math.min(...gridSizeToArray(gridSize)));
@@ -58,10 +54,15 @@ const App = () => {
   const shuffleTable = () =>
     setNumbers(shuffleInPlace([...gridSizeToArray(gridSize)]));
 
-  const startGame = () => {
-    setGridSizeChangedWhenCompleted(false);
-    shuffleTable();
+  // const resetNumbers = () => setNumbers();
+
+  const resetGame = () => {
     resetExpectedNumber();
+  };
+
+  const startGame = () => {
+    resetGame();
+    shuffleTable();
     setGameState("Playing");
     setRoundStartTimestamp(new Date().getTime());
   };
@@ -93,8 +94,7 @@ const App = () => {
         setDisplayOnlyTable={setDisplayOnlyTable}
         setGridSize={setGridSize}
         hidden={displayOnlyTable}
-        setGridSizeChangedWhenCompleted={setGridSizeChangedWhenCompleted}
-        resetExpectedNumber={resetExpectedNumber}
+        resetGame={resetGame}
       />
       <div className="tableContainer">
         <SchulteTable
@@ -105,7 +105,6 @@ const App = () => {
           gridSize={gridSize}
           endGame={endGame}
           startGame={startGame}
-          gridSizeChangedWhenCompleted={gridSizeChangedWhenCompleted}
         />
       </div>
       <GridSizeContext.Provider value={gridSize}>

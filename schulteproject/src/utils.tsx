@@ -1,4 +1,9 @@
-import { GridSize, MatchRecord } from "./interfaces";
+import {
+  GridSize,
+  MatchRecord,
+  gridSizeToCssLookUp,
+  gridSizeToDisplayLookUp,
+} from "./interfaces";
 
 export const shuffleInPlace = (array: any[]) => {
   return array.sort(() => Math.random() - 0.5);
@@ -27,17 +32,27 @@ export const numberArray = (
 export const gridSizeToArray = (gridSize: GridSize) =>
   numberArray(1, gridSize + 1, 1);
 
-export const gridSizeToCss = (() => {
-  const lookUp: { [key in GridSize]: string } = {
-    [GridSize.Size3x3]: "grid3x3",
-    [GridSize.Size4x4]: "grid4x4",
-    [GridSize.Size5x5]: "grid5x5",
-  };
-  return (gridSize: GridSize) => lookUp[gridSize];
-})();
+export const gridSizeToCss = (gridSize: GridSize) =>
+  gridSizeToCssLookUp[gridSize];
 
-// TODO: implement grid size to display
+export const gridSizeToDisplay = (gridSize: GridSize) =>
+  gridSizeToDisplayLookUp[gridSize];
 
 export const last = <T,>(arr: T[]): T | undefined => arr[arr.length - 1];
 
-export const gridSizeToDisplay = (gridSize: number): string => "";
+export const findLastPlayed = (matches: MatchRecord[]) => last(matches);
+
+export const findPersonalBestRecord = (matches: MatchRecord[]) =>
+  matches.length
+    ? matches.reduce((previousMatch, currentMatch) =>
+        previousMatch.durationInMilliseconds <
+        currentMatch.durationInMilliseconds
+          ? previousMatch
+          : currentMatch
+      )
+    : undefined;
+
+export const findSettingSpecificMatches = (
+  matches: MatchRecord[],
+  gridSize: GridSize
+) => matches.filter((match) => match.gridSize === gridSize);

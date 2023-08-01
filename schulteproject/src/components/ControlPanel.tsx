@@ -1,5 +1,6 @@
 import React, { FC } from "react";
 import { GameState, GridSize } from "../interfaces";
+import { gridSizeToDisplay } from "../utils";
 
 interface ControlPanelProps {
   gameState: GameState;
@@ -11,21 +12,18 @@ interface ControlPanelProps {
   setDisplayOnlyTable: React.Dispatch<React.SetStateAction<boolean>>;
   hidden: boolean;
   setGridSize: React.Dispatch<React.SetStateAction<GridSize>>;
-  setGridSizeChangedWhenCompleted: React.Dispatch<
-    React.SetStateAction<boolean>
-  >;
-  resetExpectedNumber: () => void;
+  resetGame: () => void;
 }
 
 const ControlPanel: FC<ControlPanelProps> = (props) => {
   const {
     gameState,
+    setGameState,
     startGame,
     setDisplayOnlyTable,
     hidden,
     setGridSize,
-    setGridSizeChangedWhenCompleted,
-    resetExpectedNumber,
+    resetGame,
   } = props;
 
   const handleStartGame = () => {
@@ -45,8 +43,9 @@ const ControlPanel: FC<ControlPanelProps> = (props) => {
       case "NotStarted":
         break;
       case "Completed":
-        setGridSizeChangedWhenCompleted(true);
-        resetExpectedNumber();
+        // TODO: change game state to not started
+        setGameState("NotStarted");
+        resetGame();
         break;
     }
 
@@ -87,13 +86,13 @@ const ControlPanel: FC<ControlPanelProps> = (props) => {
         <div className="gameSettings">
           <div className="gridSetting">
             <button onClick={() => handleGridSizeSetting(GridSize.Size3x3)}>
-              3 x 3
+              {gridSizeToDisplay(GridSize.Size3x3)}
             </button>
             <button onClick={() => handleGridSizeSetting(GridSize.Size4x4)}>
-              4 x 4
+              {gridSizeToDisplay(GridSize.Size4x4)}
             </button>
             <button onClick={() => handleGridSizeSetting(GridSize.Size5x5)}>
-              5 x 5
+              {gridSizeToDisplay(GridSize.Size5x5)}
             </button>
           </div>
         </div>

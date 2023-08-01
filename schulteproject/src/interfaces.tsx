@@ -8,3 +8,13 @@ export interface MatchRecord {
   gridSize: GridSize;
   durationInMilliseconds: number;
 }
+export const gridSizeToCssLookUp: { [key in GridSize]: string } = {
+  [GridSize.Size3x3]: "grid3x3",
+  [GridSize.Size4x4]: "grid4x4",
+  [GridSize.Size5x5]: "grid5x5",
+};
+export const gridSizeToDisplayLookUp: { [key in GridSize]: string } = {
+  [GridSize.Size3x3]: "3 x 3",
+  [GridSize.Size4x4]: "4 x 4",
+  [GridSize.Size5x5]: "5 x 5",
+};
