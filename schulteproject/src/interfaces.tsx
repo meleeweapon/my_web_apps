@@ -18,3 +18,17 @@ export const gridSizeToDisplayLookUp: { [key in GridSize]: string } = {
   [GridSize.Size4x4]: "4 x 4",
   [GridSize.Size5x5]: "5 x 5",
 };
+export enum GameModes {
+  Vanilla,
+  Reverse,
+  Memory,
+  Reaction,
+}
+export interface GameModeRule {
+  winCondition: (
+    pressedNumber: number,
+    numbers: number[],
+    expectedNumber: number
+  ) => boolean;
+  expectedNumberSetter: (previousExpectedNumber: number) => number;
+}

@@ -3,18 +3,21 @@ import "./App.css";
 import SchulteTable from "./components/SchulteTable";
 import ControlPanel from "./components/ControlPanel";
 import Statistics from "./components/Statistics";
-import { GameState, GridSize, MatchRecord } from "./interfaces";
+import { GameModes, GameState, GridSize, MatchRecord } from "./interfaces";
 import { gridSizeToArray, shuffleInPlace } from "./utils";
 
-// TODO: change set game state so it does needed things when changing state.
+// TODO: implement game mode property for match record type and change matches info accordingly
+// TODO: change styling logic based on game mode
 // TODO: add new game modes: reaction, memory, reverse, vanilla...
 // TODO: consider adding a "linear" gamemode, where
 // numbers are in a 1x16 grid for example.
 
+// misc: make a state machine
 // misc: add special effect when pr is achieved.
 // misc: add help features, accessibility features...
 // misc: add indicator for the expected value.
 // misc: add indicator for current game settings (grid size, gamemode etc).
+// misc: make selected game settings styled differently
 
 export const GameStateContext = createContext<GameState>("NotStarted");
 export const MatchesContext = createContext<MatchRecord[]>([]);
@@ -47,27 +50,45 @@ const App = () => {
   const [expectedNumber, setExpectedNumber] = useState<number>(
     Math.min(...gridSizeToArray(gridSize))
   );
+  const [gameMode, setGameMode] = useState<GameModes>(GameModes.Vanilla);
 
-  const resetExpectedNumber = () =>
-    setExpectedNumber(Math.min(...gridSizeToArray(gridSize)));
+  const resetExpectedNumber = (): void => {
+    // setExpectedNumber(Math.min(...gridSizeToArray(gridSize)));
+    const orderedNumbers = gridSizeToArray(gridSize);
+    switch (gameMode) {
+      case GameModes.Vanilla:
+        setExpectedNumber(Math.min(...orderedNumbers));
+        break;
+      case GameModes.Reverse:
+        setExpectedNumber(Math.max(...orderedNumbers));
+        console.log(expectedNumber);
+        break;
+      case GameModes.Reaction:
+        setExpectedNumber(Math.min(...orderedNumbers));
+        break;
+      case GameModes.Memory:
+        setExpectedNumber(Math.min(...orderedNumbers));
+        break;
+    }
+  };
 
-  const shuffleTable = () =>
-    setNumbers(shuffleInPlace([...gridSizeToArray(gridSize)]));
+  const shuffleTable = (): void =>
+    setNumbers(shuffleInPlace(gridSizeToArray(gridSize)));
 
   // const resetNumbers = () => setNumbers();
 
-  const resetGame = () => {
+  const resetGame = (): void => {
     resetExpectedNumber();
   };
 
-  const startGame = () => {
+  const startGame = (): void => {
     resetGame();
     shuffleTable();
     setGameState("Playing");
     setRoundStartTimestamp(new Date().getTime());
   };
 
-  const endGame = () => {
+  const endGame = (): void => {
     setGameState("Completed");
     if (!roundStartTimestamp)
       throw new Error("Round start time can't be undefined.");
@@ -78,6 +99,30 @@ const App = () => {
       gridSize: gridSize,
     };
     setMatches((previousMatches) => [...previousMatches, record]);
+  };
+
+  // const setExpectedNumberWithGameMode = () => {
+  //   if (!numbers) return;
+  //   switch (gameMode) {
+  //     case GameModes.Vanilla:
+  //       setExpectedNumber(Math.min(...numbers));
+  //       break;
+  //     case GameModes.Reverse:
+  //       setExpectedNumber(Math.max(...numbers));
+  //       console.log(expectedNumber);
+  //       break;
+  //     case GameModes.Reaction:
+  //       setExpectedNumber(Math.min(...numbers));
+  //       break;
+  //     case GameModes.Memory:
+  //       setExpectedNumber(Math.min(...numbers));
+  //       break;
+  //   }
+  // };
+
+  const changeGameMode = (gameMode: GameModes): void => {
+    setGameMode(gameMode);
+    // setExpectedNumberWithGameMode();
   };
 
   useEffect(() => {
@@ -95,6 +140,7 @@ const App = () => {
         setGridSize={setGridSize}
         hidden={displayOnlyTable}
         resetGame={resetGame}
+        changeGameMode={changeGameMode}
       />
       <div className="tableContainer">
         <SchulteTable
@@ -105,6 +151,7 @@ const App = () => {
           gridSize={gridSize}
           endGame={endGame}
           startGame={startGame}
+          gameMode={gameMode}
         />
       </div>
       <GridSizeContext.Provider value={gridSize}>

@@ -1,5 +1,5 @@
 import React, { FC } from "react";
-import { GameState, GridSize } from "../interfaces";
+import { GameModeRule, GameModes, GameState, GridSize } from "../interfaces";
 import ReplaySvg from "./ReplaySvg";
 import PlaySvg from "./PlaySvg";
 import { gridSizeToArray, gridSizeToCss } from "../utils";
@@ -12,6 +12,7 @@ interface SchulteTableProps {
   gridSize: GridSize;
   endGame: () => void;
   startGame: () => void;
+  gameMode: GameModes;
 }
 
 const SchulteTable: FC<SchulteTableProps> = (props) => {
@@ -23,19 +24,53 @@ const SchulteTable: FC<SchulteTableProps> = (props) => {
     gridSize,
     endGame,
     startGame,
+    gameMode,
   } = props;
 
-  const handleTile = (theNumber: number): void => {
-    if (theNumber !== expectedNumber || gameState !== "Playing" || !numbers) {
+  const GameModeRules: { [key in GameModes]: GameModeRule } = {
+    [GameModes.Vanilla]: {
+      expectedNumberSetter: (previousExpectedNumber) =>
+        previousExpectedNumber + 1,
+      winCondition: (pressedNumber, numbers, expectedNumber) =>
+        pressedNumber === Math.max(...numbers),
+    },
+    [GameModes.Reverse]: {
+      expectedNumberSetter: (previousExpectedNumber) =>
+        previousExpectedNumber - 1,
+      winCondition: (pressedNumber, numbers, expectedNumber) =>
+        pressedNumber === Math.min(...numbers),
+    },
+    [GameModes.Reaction]: {
+      expectedNumberSetter: (previousExpectedNumber) =>
+        previousExpectedNumber + 1,
+      winCondition: (pressedNumber, numbers, expectedNumber) =>
+        pressedNumber === Math.max(...numbers),
+    },
+    [GameModes.Memory]: {
+      expectedNumberSetter: (previousExpectedNumber) =>
+        previousExpectedNumber + 1,
+      winCondition: (pressedNumber, numbers, expectedNumber) =>
+        pressedNumber === Math.max(...numbers),
+    },
+  };
+
+  const handleTile = (pressedNumber: number): void => {
+    if (
+      pressedNumber !== expectedNumber ||
+      gameState !== "Playing" ||
+      !numbers
+    ) {
       return;
     }
 
+    const rules = GameModeRules[gameMode];
+
     // win condition
-    if (theNumber === Math.max(...numbers)) {
+    if (rules.winCondition(pressedNumber, numbers, expectedNumber)) {
       endGame();
     }
 
-    setExpectedNumber((previousExpectedNumber) => previousExpectedNumber + 1);
+    setExpectedNumber(rules.expectedNumberSetter);
   };
 
   const renderTile = (tileNumber: number, index: number) => {
