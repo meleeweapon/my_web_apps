@@ -1,14 +1,20 @@
 import React, { FC, useContext, useState } from "react";
-import { GridSizeContext, MatchesContext, SetMatchesContext } from "../App";
+import {
+  GameModeContext,
+  GridSizeContext,
+  MatchesContext,
+  SetMatchesContext,
+} from "../App";
 import {
   findLastPlayed,
   findPersonalBestRecord,
   findSettingSpecificMatches,
   formatMatchDuration,
+  gameModeToDisplay,
   gridSizeToDisplay,
   last,
 } from "../utils";
-import { GridSize, MatchRecord } from "../interfaces";
+import { GameMode, GridSize, MatchRecord } from "../interfaces";
 import { Match } from "@testing-library/react";
 
 interface MatchesInfoProps {}
@@ -17,6 +23,7 @@ const MatchesInfo: FC<MatchesInfoProps> = (props) => {
   const matches = useContext(MatchesContext);
   const setMatches = useContext(SetMatchesContext);
   const gridSize = useContext(GridSizeContext);
+  const gameMode = useContext(GameModeContext);
 
   const handleReset = () => {
     if (!setMatches) throw new Error("setMatches must not be null");
@@ -25,7 +32,11 @@ const MatchesInfo: FC<MatchesInfoProps> = (props) => {
 
   // TODO: find a better word than settings, settings sounds technical,
   // apply the same strategy as changing gamemode name 'classic' to 'vanilla'
-  const settingSpecificMatches = findSettingSpecificMatches(matches, gridSize);
+  const settingSpecificMatches = findSettingSpecificMatches(
+    matches,
+    gridSize,
+    gameMode
+  );
 
   const personalBestRecord = findPersonalBestRecord(settingSpecificMatches);
   const personalBestSeconds = personalBestRecord
@@ -42,7 +53,9 @@ const MatchesInfo: FC<MatchesInfoProps> = (props) => {
     <div className="matchesInfo">
       <button onClick={handleReset}>Reset</button>
 
-      <div>{gridSizeToDisplay(gridSize)}</div>
+      <div>{`${gridSizeToDisplay(gridSize)} ${gameModeToDisplay(
+        gameMode
+      )}`}</div>
 
       {settingSpecificMatches.length <= 0 ? (
         <div>No records yet.</div>

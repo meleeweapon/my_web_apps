@@ -1,5 +1,11 @@
 import React, { FC } from "react";
-import { GameModeRule, GameModes, GameState, GridSize } from "../interfaces";
+import {
+  GameModeRule,
+  GameMode,
+  GameState,
+  GridSize,
+  gameModeToDisplayLookUp,
+} from "../interfaces";
 import ReplaySvg from "./ReplaySvg";
 import PlaySvg from "./PlaySvg";
 import { gridSizeToArray, gridSizeToCss } from "../utils";
@@ -12,7 +18,7 @@ interface SchulteTableProps {
   gridSize: GridSize;
   endGame: () => void;
   startGame: () => void;
-  gameMode: GameModes;
+  gameMode: GameMode;
 }
 
 const SchulteTable: FC<SchulteTableProps> = (props) => {
@@ -27,26 +33,26 @@ const SchulteTable: FC<SchulteTableProps> = (props) => {
     gameMode,
   } = props;
 
-  const GameModeRules: { [key in GameModes]: GameModeRule } = {
-    [GameModes.Vanilla]: {
+  const GameModeRules: { [key in GameMode]: GameModeRule } = {
+    [GameMode.Vanilla]: {
       expectedNumberSetter: (previousExpectedNumber) =>
         previousExpectedNumber + 1,
       winCondition: (pressedNumber, numbers, expectedNumber) =>
         pressedNumber === Math.max(...numbers),
     },
-    [GameModes.Reverse]: {
+    [GameMode.Reverse]: {
       expectedNumberSetter: (previousExpectedNumber) =>
         previousExpectedNumber - 1,
       winCondition: (pressedNumber, numbers, expectedNumber) =>
         pressedNumber === Math.min(...numbers),
     },
-    [GameModes.Reaction]: {
+    [GameMode.Reaction]: {
       expectedNumberSetter: (previousExpectedNumber) =>
         previousExpectedNumber + 1,
       winCondition: (pressedNumber, numbers, expectedNumber) =>
         pressedNumber === Math.max(...numbers),
     },
-    [GameModes.Memory]: {
+    [GameMode.Memory]: {
       expectedNumberSetter: (previousExpectedNumber) =>
         previousExpectedNumber + 1,
       winCondition: (pressedNumber, numbers, expectedNumber) =>
@@ -74,15 +80,31 @@ const SchulteTable: FC<SchulteTableProps> = (props) => {
   };
 
   const renderTile = (tileNumber: number, index: number) => {
+    const GameModetyleRule =
+      gameMode === GameMode.Reverse
+        ? tileNumber > expectedNumber
+        : tileNumber < expectedNumber;
     return (
       <button
         className={`tile ${
-          tileNumber < expectedNumber ? " clicked" : " unclicked"
+          GameModetyleRule && gameState !== "NotStarted"
+            ? " clicked"
+            : " unclicked"
         }`}
         key={index}
         onClick={() => handleTile(tileNumber)}
       >
-        {tileNumber}
+        <div
+          className={`${
+            gameMode === GameMode.Reaction &&
+            tileNumber !== expectedNumber &&
+            gameState !== "Completed"
+              ? "hidden"
+              : ""
+          }`}
+        >
+          {tileNumber}
+        </div>
       </button>
     );
   };

@@ -1,6 +1,8 @@
 import {
+  GameMode,
   GridSize,
   MatchRecord,
+  gameModeToDisplayLookUp,
   gridSizeToCssLookUp,
   gridSizeToDisplayLookUp,
 } from "./interfaces";
@@ -54,5 +56,12 @@ export const findPersonalBestRecord = (matches: MatchRecord[]) =>
 
 export const findSettingSpecificMatches = (
   matches: MatchRecord[],
-  gridSize: GridSize
-) => matches.filter((match) => match.gridSize === gridSize);
+  gridSize: GridSize,
+  gameMode: GameMode
+) =>
+  matches.filter(
+    (match) => match.gridSize === gridSize && match.gameMode === gameMode
+  );
+
+export const gameModeToDisplay = (gameMode: GameMode) =>
+  gameModeToDisplayLookUp[gameMode];

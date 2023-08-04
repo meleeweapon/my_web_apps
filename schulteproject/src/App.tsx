@@ -3,21 +3,25 @@ import "./App.css";
 import SchulteTable from "./components/SchulteTable";
 import ControlPanel from "./components/ControlPanel";
 import Statistics from "./components/Statistics";
-import { GameModes, GameState, GridSize, MatchRecord } from "./interfaces";
+import { GameMode, GameState, GridSize, MatchRecord } from "./interfaces";
 import { gridSizeToArray, shuffleInPlace } from "./utils";
 
+// TODO: implement memory game mode, it's gonna need a timer and it has to reveal the number
+// if the selected tile is the wrong one.
 // TODO: implement game mode property for match record type and change matches info accordingly
-// TODO: change styling logic based on game mode
 // TODO: add new game modes: reaction, memory, reverse, vanilla...
 // TODO: consider adding a "linear" gamemode, where
 // numbers are in a 1x16 grid for example.
 
-// misc: make a state machine
+// misc: instead of making reverse a gamemode, add a direction setting.
+// misc: refactor the gamemode code, try to decouple different gamemodes.
+// misc: refactor in general.
+// misc: make a state machine.
 // misc: add special effect when pr is achieved.
 // misc: add help features, accessibility features...
 // misc: add indicator for the expected value.
 // misc: add indicator for current game settings (grid size, gamemode etc).
-// misc: make selected game settings styled differently
+// misc: make selected game settings styled differently.
 
 export const GameStateContext = createContext<GameState>("NotStarted");
 export const MatchesContext = createContext<MatchRecord[]>([]);
@@ -25,6 +29,7 @@ export const SetMatchesContext = createContext<React.Dispatch<
   React.SetStateAction<MatchRecord[]>
 > | null>(null);
 export const GridSizeContext = createContext<GridSize>(GridSize.Size4x4);
+export const GameModeContext = createContext<GameMode>(GameMode.Vanilla);
 
 export const matchesKey = "matches";
 const getMatchesFromLocalStorage = (): MatchRecord[] => {
@@ -50,23 +55,23 @@ const App = () => {
   const [expectedNumber, setExpectedNumber] = useState<number>(
     Math.min(...gridSizeToArray(gridSize))
   );
-  const [gameMode, setGameMode] = useState<GameModes>(GameModes.Vanilla);
+  const [gameMode, setGameMode] = useState<GameMode>(GameMode.Vanilla);
 
   const resetExpectedNumber = (): void => {
     // setExpectedNumber(Math.min(...gridSizeToArray(gridSize)));
     const orderedNumbers = gridSizeToArray(gridSize);
     switch (gameMode) {
-      case GameModes.Vanilla:
+      case GameMode.Vanilla:
         setExpectedNumber(Math.min(...orderedNumbers));
         break;
-      case GameModes.Reverse:
+      case GameMode.Reverse:
         setExpectedNumber(Math.max(...orderedNumbers));
         console.log(expectedNumber);
         break;
-      case GameModes.Reaction:
+      case GameMode.Reaction:
         setExpectedNumber(Math.min(...orderedNumbers));
         break;
-      case GameModes.Memory:
+      case GameMode.Memory:
         setExpectedNumber(Math.min(...orderedNumbers));
         break;
     }
@@ -74,8 +79,6 @@ const App = () => {
 
   const shuffleTable = (): void =>
     setNumbers(shuffleInPlace(gridSizeToArray(gridSize)));
-
-  // const resetNumbers = () => setNumbers();
 
   const resetGame = (): void => {
     resetExpectedNumber();
@@ -97,6 +100,7 @@ const App = () => {
     const record: MatchRecord = {
       durationInMilliseconds: temporaryRoundTime,
       gridSize: gridSize,
+      gameMode: gameMode,
     };
     setMatches((previousMatches) => [...previousMatches, record]);
   };
@@ -104,23 +108,23 @@ const App = () => {
   // const setExpectedNumberWithGameMode = () => {
   //   if (!numbers) return;
   //   switch (gameMode) {
-  //     case GameModes.Vanilla:
+  //     case GameMode.Vanilla:
   //       setExpectedNumber(Math.min(...numbers));
   //       break;
-  //     case GameModes.Reverse:
+  //     case GameMode.Reverse:
   //       setExpectedNumber(Math.max(...numbers));
   //       console.log(expectedNumber);
   //       break;
-  //     case GameModes.Reaction:
+  //     case GameMode.Reaction:
   //       setExpectedNumber(Math.min(...numbers));
   //       break;
-  //     case GameModes.Memory:
+  //     case GameMode.Memory:
   //       setExpectedNumber(Math.min(...numbers));
   //       break;
   //   }
   // };
 
-  const changeGameMode = (gameMode: GameModes): void => {
+  const changeGameMode = (gameMode: GameMode): void => {
     setGameMode(gameMode);
     // setExpectedNumberWithGameMode();
   };
@@ -154,15 +158,17 @@ const App = () => {
           gameMode={gameMode}
         />
       </div>
-      <GridSizeContext.Provider value={gridSize}>
-        <MatchesContext.Provider value={matches}>
-          <SetMatchesContext.Provider value={setMatches}>
-            <GameStateContext.Provider value={gameState}>
-              <Statistics hidden={displayOnlyTable} />
-            </GameStateContext.Provider>
-          </SetMatchesContext.Provider>
-        </MatchesContext.Provider>
-      </GridSizeContext.Provider>
+      <GameModeContext.Provider value={gameMode}>
+        <GridSizeContext.Provider value={gridSize}>
+          <MatchesContext.Provider value={matches}>
+            <SetMatchesContext.Provider value={setMatches}>
+              <GameStateContext.Provider value={gameState}>
+                <Statistics hidden={displayOnlyTable} />
+              </GameStateContext.Provider>
+            </SetMatchesContext.Provider>
+          </MatchesContext.Provider>
+        </GridSizeContext.Provider>
+      </GameModeContext.Provider>
     </div>
   );
 };

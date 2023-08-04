@@ -1,6 +1,6 @@
 import React, { FC } from "react";
-import { GameModes, GameState, GridSize } from "../interfaces";
-import { gridSizeToDisplay } from "../utils";
+import { GameMode, GameState, GridSize } from "../interfaces";
+import { gameModeToDisplay, gridSizeToDisplay } from "../utils";
 
 interface ControlPanelProps {
   gameState: GameState;
@@ -13,7 +13,7 @@ interface ControlPanelProps {
   hidden: boolean;
   setGridSize: React.Dispatch<React.SetStateAction<GridSize>>;
   resetGame: () => void;
-  changeGameMode: (gameMode: GameModes) => void;
+  changeGameMode: (gameMode: GameMode) => void;
 }
 
 const ControlPanel: FC<ControlPanelProps> = (props) => {
@@ -54,7 +54,7 @@ const ControlPanel: FC<ControlPanelProps> = (props) => {
     setGridSize(gridSize);
   };
 
-  const handleGameModeSetting = (gameMode: GameModes): void => {
+  const handleGameModeSetting = (gameMode: GameMode): void => {
     switch (gameState) {
       case "Playing":
         return;
@@ -114,12 +114,18 @@ const ControlPanel: FC<ControlPanelProps> = (props) => {
             </button>
           </div>
 
-          <div className="gamemodeSetting">
-            <button onClick={() => handleGameModeSetting(GameModes.Vanilla)}>
-              Vanilla
+          <div className="GameModeetting">
+            <button onClick={() => handleGameModeSetting(GameMode.Vanilla)}>
+              {gameModeToDisplay(GameMode.Vanilla)}
             </button>
-            <button onClick={() => handleGameModeSetting(GameModes.Reverse)}>
-              Reverse
+            <button onClick={() => handleGameModeSetting(GameMode.Reverse)}>
+              {gameModeToDisplay(GameMode.Reverse)}
+            </button>
+            <button onClick={() => handleGameModeSetting(GameMode.Memory)}>
+              {gameModeToDisplay(GameMode.Memory)}
+            </button>
+            <button onClick={() => handleGameModeSetting(GameMode.Reaction)}>
+              {gameModeToDisplay(GameMode.Reaction)}
             </button>
           </div>
         </div>

@@ -201,3 +201,7 @@ button:hover {
   width: 120px;
   height: 120px;
 }
+
+.textHidden {
+  color: rgba(0, 0, 0, 0);
+}

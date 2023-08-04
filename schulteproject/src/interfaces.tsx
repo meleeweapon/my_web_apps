@@ -7,6 +7,7 @@ export enum GridSize {
 export interface MatchRecord {
   gridSize: GridSize;
   durationInMilliseconds: number;
+  gameMode: GameMode;
 }
 export const gridSizeToCssLookUp: { [key in GridSize]: string } = {
   [GridSize.Size3x3]: "grid3x3",
@@ -18,12 +19,18 @@ export const gridSizeToDisplayLookUp: { [key in GridSize]: string } = {
   [GridSize.Size4x4]: "4 x 4",
   [GridSize.Size5x5]: "5 x 5",
 };
-export enum GameModes {
+export enum GameMode {
   Vanilla,
   Reverse,
   Memory,
   Reaction,
 }
+export const gameModeToDisplayLookUp: { [key in GameMode]: string } = {
+  [GameMode.Vanilla]: "Vanilla",
+  [GameMode.Reverse]: "Reverse",
+  [GameMode.Memory]: "Memory",
+  [GameMode.Reaction]: "Reaction",
+};
 export interface GameModeRule {
   winCondition: (
     pressedNumber: number,
