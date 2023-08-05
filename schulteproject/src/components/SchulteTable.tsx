@@ -60,12 +60,18 @@ const SchulteTable: FC<SchulteTableProps> = (props) => {
     },
   };
 
-  const handleTile = (pressedNumber: number): void => {
-    if (
-      pressedNumber !== expectedNumber ||
-      gameState !== "Playing" ||
-      !numbers
-    ) {
+  const handleTile = (
+    event: React.MouseEvent<HTMLButtonElement, MouseEvent>,
+    pressedNumber: number
+  ): void => {
+    if (gameState !== "Playing" || !numbers) {
+      return;
+    }
+    // for testing purposes, do not do it this way.
+    if (pressedNumber !== expectedNumber) {
+      const tile = event.target as HTMLElement;
+      tile.classList.add("revealTileShortly");
+      console.log(tile);
       return;
     }
 
@@ -92,7 +98,7 @@ const SchulteTable: FC<SchulteTableProps> = (props) => {
             : " unclicked"
         }`}
         key={index}
-        onClick={() => handleTile(tileNumber)}
+        onClick={(event) => handleTile(event, tileNumber)}
       >
         <div
           className={`${
@@ -100,6 +106,11 @@ const SchulteTable: FC<SchulteTableProps> = (props) => {
             tileNumber !== expectedNumber &&
             gameState !== "Completed"
               ? "hidden"
+              : ""
+          } ${
+            // for testing purposes
+            gameMode === GameMode.Memory && tileNumber === expectedNumber
+              ? " revealTileShortly"
               : ""
           }`}
         >

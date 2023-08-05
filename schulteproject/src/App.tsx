@@ -6,6 +6,8 @@ import Statistics from "./components/Statistics";
 import { GameMode, GameState, GridSize, MatchRecord } from "./interfaces";
 import { gridSizeToArray, shuffleInPlace } from "./utils";
 
+// TODO: i have to research about how to work with css animations in react,
+// the animations aren't working correctly.
 // TODO: implement memory game mode, it's gonna need a timer and it has to reveal the number
 // if the selected tile is the wrong one.
 // TODO: implement game mode property for match record type and change matches info accordingly
@@ -62,17 +64,13 @@ const App = () => {
     const orderedNumbers = gridSizeToArray(gridSize);
     switch (gameMode) {
       case GameMode.Vanilla:
+      case GameMode.Reaction:
+      case GameMode.Memory:
         setExpectedNumber(Math.min(...orderedNumbers));
         break;
       case GameMode.Reverse:
         setExpectedNumber(Math.max(...orderedNumbers));
         console.log(expectedNumber);
-        break;
-      case GameMode.Reaction:
-        setExpectedNumber(Math.min(...orderedNumbers));
-        break;
-      case GameMode.Memory:
-        setExpectedNumber(Math.min(...orderedNumbers));
         break;
     }
   };
