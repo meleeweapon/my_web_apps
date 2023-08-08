@@ -9,6 +9,7 @@ import {
 import ReplaySvg from "./ReplaySvg";
 import PlaySvg from "./PlaySvg";
 import { gridSizeToArray, gridSizeToCss } from "../utils";
+import SchulteTile from "./SchulteTile";
 
 interface SchulteTableProps {
   gameState: GameState;
@@ -62,19 +63,15 @@ const SchulteTable: FC<SchulteTableProps> = (props) => {
 
   const handleTile = (
     event: React.MouseEvent<HTMLButtonElement, MouseEvent>,
-    pressedNumber: number
+    pressedNumber: number,
+    clickedStateSetter: React.Dispatch<React.SetStateAction<boolean>>
   ): void => {
     if (gameState !== "Playing" || !numbers) {
       return;
     }
-    // for testing purposes, do not do it this way.
     if (pressedNumber !== expectedNumber) {
-      const tile = event.target as HTMLElement;
-      tile.classList.add("revealTileShortly");
-      console.log(tile);
       return;
     }
-
     const rules = GameModeRules[gameMode];
 
     // win condition
@@ -85,48 +82,29 @@ const SchulteTable: FC<SchulteTableProps> = (props) => {
     setExpectedNumber(rules.expectedNumberSetter);
   };
 
-  const renderTile = (tileNumber: number, index: number) => {
-    const GameModetyleRule =
-      gameMode === GameMode.Reverse
-        ? tileNumber > expectedNumber
-        : tileNumber < expectedNumber;
+  const tileWithStandardPropsGiven = (tileNumber: number, index: number) => {
     return (
-      <button
-        className={`tile ${
-          GameModetyleRule && gameState !== "NotStarted"
-            ? " clicked"
-            : " unclicked"
-        }`}
+      <SchulteTile
+        expectedNumber={expectedNumber}
+        gameMode={gameMode}
+        gameState={gameState}
+        handleTile={handleTile}
         key={index}
-        onClick={(event) => handleTile(event, tileNumber)}
-      >
-        <div
-          className={`${
-            gameMode === GameMode.Reaction &&
-            tileNumber !== expectedNumber &&
-            gameState !== "Completed"
-              ? "hidden"
-              : ""
-          } ${
-            // for testing purposes
-            gameMode === GameMode.Memory && tileNumber === expectedNumber
-              ? " revealTileShortly"
-              : ""
-          }`}
-        >
-          {tileNumber}
-        </div>
-      </button>
+        tileNumber={tileNumber}
+      />
     );
   };
 
-  const orderedTable = () => gridSizeToArray(gridSize).map(renderTile);
+  const orderedTable = () =>
+    gridSizeToArray(gridSize).map(tileWithStandardPropsGiven);
+
+  // const actualTable = () => numbers.map(tileWithStandardPropsGiven);
 
   return (
     <div className={`schulteTable ${gridSizeToCss(gridSize)}`}>
       {!numbers || gameState === "NotStarted"
         ? orderedTable()
-        : numbers.map(renderTile)}
+        : numbers.map(tileWithStandardPropsGiven)}
       {gameState !== "Playing" && (
         <button className="tableReplay" onClick={startGame}>
           {gameState === "NotStarted" ? <PlaySvg /> : <ReplaySvg />}
