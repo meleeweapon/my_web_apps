@@ -1,4 +1,5 @@
 import React, { FC } from "react";
+import ReactDOM from "react-dom";
 import {
   GameModeRule,
   GameMode,
@@ -64,11 +65,23 @@ const SchulteTable: FC<SchulteTableProps> = (props) => {
   const handleTile = (
     event: React.MouseEvent<HTMLButtonElement, MouseEvent>,
     pressedNumber: number,
-    clickedStateSetter: React.Dispatch<React.SetStateAction<boolean>>
+    setPlayAnimation: React.Dispatch<React.SetStateAction<boolean>>,
+    tileInstance: React.ReactInstance | null | undefined
   ): void => {
     if (gameState !== "Playing" || !numbers) {
       return;
     }
+
+    if (gameMode === GameMode.Memory) {
+      setPlayAnimation(true);
+      const tileElement = ReactDOM.findDOMNode(tileInstance);
+      console.log(tileElement);
+      console.log(tileInstance);
+      tileElement?.addEventListener("animationend", () =>
+        setPlayAnimation(false)
+      );
+    }
+
     if (pressedNumber !== expectedNumber) {
       return;
     }

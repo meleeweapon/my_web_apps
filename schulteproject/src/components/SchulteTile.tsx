@@ -1,4 +1,4 @@
-import React, { FC, useState } from "react";
+import React, { FC, useEffect, useState } from "react";
 import { GameMode, GameState } from "../interfaces";
 
 interface SchulteTileProps {
@@ -9,14 +9,19 @@ interface SchulteTileProps {
   handleTile: (
     event: React.MouseEvent<HTMLButtonElement, MouseEvent>,
     pressedNumber: number,
-    clickedStateSetter: React.Dispatch<React.SetStateAction<boolean>>
+    setPlayAnimation: React.Dispatch<React.SetStateAction<boolean>>,
+    tileInstance: React.ReactInstance | null | undefined
   ) => void;
 }
 
 const SchulteTile: FC<SchulteTileProps> = (props) => {
   const { gameMode, tileNumber, expectedNumber, gameState, handleTile } = props;
 
-  const [clicked, setClicked] = useState<boolean>(true);
+  const [playAnimation, setPlayAnimation] = useState<boolean>(false);
+
+  const thisTileInstance = this;
+  console.log(this);
+  console.log(thisTileInstance);
 
   const GameModeStyleRule =
     gameMode === GameMode.Reverse
@@ -26,10 +31,12 @@ const SchulteTile: FC<SchulteTileProps> = (props) => {
     <button
       className={`tile ${
         GameModeStyleRule && gameState !== "NotStarted"
-          ? " clicked"
-          : " unclicked"
+          ? "clicked"
+          : "unclicked"
       }`}
-      onClick={(event) => handleTile(event, tileNumber, setClicked)}
+      onClick={(event) =>
+        handleTile(event, tileNumber, setPlayAnimation, thisTileInstance)
+      }
     >
       <div
         className={`${
@@ -40,8 +47,10 @@ const SchulteTile: FC<SchulteTileProps> = (props) => {
             : ""
         } ${
           // for testing purposes
-          gameMode === GameMode.Memory && tileNumber === expectedNumber
-            ? " revealTileShortly"
+          gameMode === GameMode.Memory
+            ? playAnimation
+              ? "revealTileShortly"
+              : "hidden"
             : ""
         }`}
       >
